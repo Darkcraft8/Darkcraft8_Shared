@@ -49,7 +49,8 @@ inventory.hasItem = function(itemDescriptorOrName, exactMatch)
         if type(itemDescriptorOrName) == "table" then
             searchString = sb.printJson({name = itemDescriptorOrName.name, parameters = itemDescriptorOrName.parameters})
         else
-            searchString = itemDescriptorOrName
+            local itemDescriptorOrName = root.createItem(itemDescriptorOrName)
+            searchString = sb.printJson({name = itemDescriptorOrName.name, parameters = itemDescriptorOrName.parameters})
         end
     else
         if type(itemDescriptorOrName) == "table" then

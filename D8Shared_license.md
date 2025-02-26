@@ -4,7 +4,7 @@
 
 #### In this Context The following refer
 - "Developer"
-    refer to the developer of the [content][def3]
+    refer to the developer of the [content][developer]
 - "You"
     refer to the individual or group viewing/using or reading this license
 
@@ -22,10 +22,11 @@
  - Do not remove or modifie this license
 
 ## Link:
-[Github Repository][def]
+[Github Repository][def]<br>
 [Chucklefish Mod Terms][def2]
 
 
-[def]: https://github.com/Darkcraft8/Darkcraft8_Shared
-[def2]: https://community.playstarbound.com/help/mod-terms/
-[def3]: Darkcraft8
+[def]: <https://github.com/Darkcraft8/Darkcraft8_Shared> 'Click to access the github repository of "Darkcraft8 Shared Files"'
+[def2]: <https://community.playstarbound.com/help/mod-terms/> "Click to access Chucklefish Mod Terms"
+
+[developer]: D8Shared_license.md "Darkcraft8"

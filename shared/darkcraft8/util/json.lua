@@ -1,8 +1,6 @@
 require "/scripts/util.lua"
 require "/shared/darkcraft8/util/lua.lua"
---require "/shared/rxi/json.lua" -- required ?
 json = json or {}
-local jsonSubFunc = jsonSubFunc or {}
 -- Starbound Specific --
 function json.sbMerge(jA_A, jA_B) -- Trie to imitate the way parameters override config
     local isVec2 = function(val)
@@ -31,7 +29,7 @@ function json.sbMerge(jA_A, jA_B) -- Trie to imitate the way parameters override
 end
 
 -- Merge, Patch and Other --
-function json.merge(jA_A, jA_B)
+function json.merge(jA_A, jA_B) -- attempt to merge both json array in a similar way has starbound parameters overrides
     for var, val in pairs(jA_B or {}) do 
         local typeA, typeB = preciseType(jA_A[var]), preciseType(val)
         if typeB == "table" and typeA == "table" then
@@ -54,7 +52,7 @@ function json.patch() -- do i really need to make this function ?
     
 end
 
-function json.override(_, jsonArray, override)
+function json.override(_, jsonArray, override) -- prettymuch redondent except for testing, util.tableMerge does the same
     local newJson = {}
     sb.logInfo("jsonArray : %s,\n[------------] [----] override : %s", jsonArray, override)
     for var, val in pairs(override or jsonArray or {}) do
@@ -67,7 +65,7 @@ function json.override(_, jsonArray, override)
     return newJson
 end
 
-function json.luaToPatch(old, new)
+function json.luaToPatch(old, new) -- create and print in the log a json patch that patch the first array into the second
     --sb.logInfo("[lua to json Patch] : start")
     local newPatch = jsonSubFunc:luaToPatch_Analyse(new, old)
 
@@ -77,6 +75,7 @@ function json.luaToPatch(old, new)
 end
 
 -- Local Sub Functions --
+local jsonSubFunc = jsonSubFunc or {}
 function jsonSubFunc.varIsTableOrArray(_, var, jsonArray)
     local type = preciseType((jsonArray or old)[var])
     if type == "table" or type == "array" then

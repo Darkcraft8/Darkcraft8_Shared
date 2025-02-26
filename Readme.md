@@ -1,9 +1,25 @@
-# These are files that i use in multiple mods...
-include : 
-  - custom tooltips utils
-  - canvas utils
-  - player inventory utils (oSb or starExtension Required)
+### Darkcraft8 Shared Files</br>
+#### A colliection of scripts and function for my mods
 
-incoming : 
-D8Machinery (currently unfinished)
+---
+
+- include : </br>
+  - [functions to make the usage of tooltips easier][tooltipDoc]
+  - [functions to help with the programing of canvas][canvasDoc]
+  - [functions to check the player inventory (oSb or starExtension Required)][invDoc]
+  - [functions to more precisely check an item parameters or config][itemDoc]
+
+---
+
+- incoming : 
+  - D8Machinery (currently unfinished)
   A library of script to easily create various kind of machine 
+
+---
+
+[tooltipDoc]: /shared/darkcraft8/_doc/tooltipUtil.md 'click here to go to documentation'
+[canvasDoc]: /shared/darkcraft8/_doc/canvasUtil.md 'click here to go to documentation'
+[invDoc]: /shared/darkcraft8/_doc/inventoryUtil.md 'click here to go to documentation'
+[itemDoc]: /shared/darkcraft8/_doc/itemUtil.md 'click here to go to documentation'
+
+[developer]: D8Shared_license.md "Darkcraft8"

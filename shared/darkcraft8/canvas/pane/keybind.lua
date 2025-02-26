@@ -1,4 +1,5 @@
 require("/shared/darkcraft8/canvas/keyboard.lua")
+-- Infinished, Extremely WIP and prettymuch doesn't do Anything
 local binds = {}
 function init()
     keyboard:getBinds()

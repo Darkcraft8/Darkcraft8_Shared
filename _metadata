@@ -1,0 +1,9 @@
+{
+  "author" : "Darkcraft8",
+  "description" : "Files and scripts that arent specific to one mod.\n\nContain :\n- custom tooltips utils\n- canvas utils\n- player inventory utils (oSb or starExtension Required)",
+  "friendlyName" : "Darkcraft8 Shared Files",
+  "name" : "d8_sharedFiles",
+  "priority" : 1,
+  "tags" : "Miscellaneous",
+  "version" : "V1.0.1"
+}

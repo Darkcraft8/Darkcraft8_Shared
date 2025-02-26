@@ -1,5 +1,6 @@
 # D8Tooltip
     Add a new function table "D8Tooltip" comprised of function to prepare or help using tooltip.
+    path : "/shared/darkcraft8/d8ToolTipUtil/tooltips.lua"
 
 #### 'Void' D8Tooltip.init()
 

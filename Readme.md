@@ -1,11 +1,11 @@
 ### Darkcraft8 Shared Files</br>
-#### A colliection of scripts and function for my mods
+#### A collection of scripts and function for my mods
 
 ---
 
 - include : </br>
   - [functions to make the usage of tooltips easier][tooltipDoc]
-  - [functions to help with the programing of canvas][canvasDoc]
+  - [functions to help with the programation of canvas][canvasDoc]
   - [functions to check the player inventory (oSb or starExtension Required)][invDoc]
   - [functions to more precisely check an item parameters or config][itemDoc]
 

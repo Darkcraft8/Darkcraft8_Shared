@@ -1,5 +1,8 @@
 # These are files that i use in multiple mods...
-include : 404
+include : 
+  - custom tooltips utils
+  - canvas utils
+  - player inventory utils (oSb or starExtension Required)
 
 incoming : 
 D8Machinery (currently unfinished)

@@ -386,18 +386,9 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
         self.tooltipCo = self:prepareScriptedTooltip(tooltip, mousePosition)
         D8Tooltip.oldMousePosition = mousePosition
     end
-
-    --local trickTooltipToNOTUpdate = {} -- old trick so that the tooltip func doesn't try to open an another pane... no longer used as the closing is now handled by a custom func that use the cursor override
-    --trickTooltipToNOTUpdate.background = copy(tooltip.gui.background)
-    --trickTooltipToNOTUpdate.background.fileHeader = trickTooltipToNOTUpdate.background.fileHeader .. "?multiply=ffffff00"
-    --trickTooltipToNOTUpdate.background.fileBody = trickTooltipToNOTUpdate.background.fileBody .. "?multiply=ffffff00"
-    --trickTooltipToNOTUpdate.background.fileFooter = trickTooltipToNOTUpdate.background.fileFooter .. "?multiply=ffffff00"
-
-    return
 end
 
--- HOoo Boy!, that openup so many stupid idea XD... could also be used to make event based on mousePosition... also i think the only way to get mouse position on update time :O
--- cursorOverride is given the mousePosition in the screen instead of the pane allowing coders to position any pane next to the cursor
+-- cursorOverride is given the mousePosition in the screen instead of the pane allowing coders to get the screenPosition of the cursor
 local _cursorOverride = cursorOverride -- incase someone load the script after init/the cursorOverride function
 function cursorOverride(mousePosition)
     D8Tooltip:cursorOverride(mousePosition)

@@ -2,13 +2,13 @@
 ### This License Only Affect Darkcraft8 Shared Files [Github Repository][def] And Doesn't Affect Other Mods
 ### This License Doesn't Take Precedent Over Chucklefish Mod Terms [Chucklefish Mod Terms][def2]
 
-### In this Context The following refer
+#### In this Context The following refer
 - "Developer"
-    refer to Darkcraft8
+    refer to the developer of the [content][def3]
 - "You"
     refer to the individual or group viewing/using or reading this license
 
-### You may put those shared file in your mod if you follow the following
+#### You may put those shared file in your mod if you follow the following
  - Respect Chucklefish Mod Terms
  
  - Do not modifie contained files or their path without the written consent of the Developer
@@ -28,3 +28,4 @@
 
 [def]: https://github.com/Darkcraft8/Darkcraft8_Shared
 [def2]: https://community.playstarbound.com/help/mod-terms/
+[def3]: Darkcraft8

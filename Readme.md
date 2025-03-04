@@ -5,7 +5,7 @@
 
 - include : </br>
   - [functions to make the usage of tooltips easier][tooltipDoc]
-  - [functions to help with the programing of canvas][canvasDoc]
+  - [functions to help with the programation of canvas][canvasDoc]
   - [functions to check the player inventory (oSb or starExtension Required)][invDoc]
   - [functions to more precisely check an item parameters or config][itemDoc]
 

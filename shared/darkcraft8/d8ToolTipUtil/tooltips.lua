@@ -2,6 +2,7 @@ require "/scripts/util.lua"
 require "/scripts/vec2.lua"
 
 D8Tooltip = {} -- I wouldn't be supprised if this util become my most used one when released
+local interfaceCanvas
 function D8Tooltip:init()
     -- add an invisible/hidden textLabel to get the size of the whole string with the current font
     if not widget.getSize("D8Tooltip_LblWidget") then
@@ -15,12 +16,39 @@ function D8Tooltip:init()
         }
         pane.addWidget(lblWidget, "D8Tooltip_LblWidget")
     end
+    if interface then 
+        if interface.bindCanvas then
+            interfaceCanvas = interface.bindCanvas("d8Tooltip")
+        end
+    end
     --
 end
 
 function D8Tooltip:update(dt)
     if self.tooltipCo then
         local status, message = coroutine.resume(self.tooltipCo)
+    end
+    if interfaceCanvas then
+        if player.getProperty("d8TooltipUtilOpen") and pane.getSize and pane.getPosition then
+            local mousePos = interfaceCanvas:mousePosition()
+            local paneSize = pane.getSize()
+            local panePos = pane.getPosition()
+            local paneRect = {
+                panePos[1],
+                panePos[2],
+                vec2.add(panePos, paneSize)[1],
+                vec2.add(panePos, paneSize)[2]
+            }
+            local inPane = function(_rect, _mousePos)
+                if not ( (_rect[1] <= _mousePos[1]) and (_rect[3] >= _mousePos[1]) ) then return false end
+                if not ( (_rect[2] <= _mousePos[2]) and (_rect[4] >= _mousePos[2]) ) then return false end
+                return true
+            end
+
+            if not inPane(paneRect, mousePos) then
+                player.setProperty("d8TooltipUtilOpen", false)
+            end
+        end
     end
 end
 
@@ -346,9 +374,10 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
         end
 
         tooltip.itemSlotList[name] = {
-            path = "itemList." .. name .. ".itemIcon",
+            path = "itemList." .. name,
             item = descriptor
         }
+        tooltip.mimicRecipeTooltip = override.mimicRecipeTooltip
 
         tooltip.gui.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
         tooltip.gui.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))

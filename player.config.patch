@@ -1,0 +1,9 @@
+[
+  [
+    { 
+      "op" : "add",
+      "path" : "/deploymentConfig/scripts/-",
+      "value" : "/shared/darkcraft8/localScript/deployment/renderer.lua"
+    }
+  ]
+]

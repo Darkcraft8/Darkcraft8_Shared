@@ -75,3 +75,5 @@ inventory.hasItem = function(itemDescriptorOrName, exactMatch)
         return false
     end
 end
+
+-- return first item with the given tag

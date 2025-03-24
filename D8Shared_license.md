@@ -29,4 +29,4 @@
 [def]: <https://github.com/Darkcraft8/Darkcraft8_Shared> 'Click to access the github repository of "Darkcraft8 Shared Files"'
 [def2]: <https://community.playstarbound.com/help/mod-terms/> "Click to access Chucklefish Mod Terms"
 
-[developer]: D8Shared_license.md "Darkcraft8"
+[developer]: <https://github.com/Darkcraft8> "Darkcraft8"

@@ -11,7 +11,7 @@
 
 ---
 
-- incoming : 
+- upcoming/future addition : 
   - D8Machinery (currently unfinished)
   A library of script to easily create various kind of machine 
 

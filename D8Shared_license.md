@@ -6,7 +6,7 @@
 - "Developer"
     refer to the developer of the [content][developer]
 - "You"
-    refer to the individual or group viewing/using or reading this license
+    refer to the individual or group viewing/reading this license or using the content
 
 #### You may put those shared file in your mod if you follow the following
  - Respect Chucklefish Mod Terms

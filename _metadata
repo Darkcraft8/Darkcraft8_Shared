@@ -1,9 +1,11 @@
 {
   "author" : "Darkcraft8",
-  "description" : "Files and scripts that arent specific to one mod.\n\nContain :\n- custom tooltips utils\n- canvas utils\n- player inventory utils (oSb or starExtension Required)",
+  "description" : "Files and scripts that arent specific to one mod.\n\nContain :\n- custom tooltips utils\n- canvas utils\n- player inventory utils (oSb or starExtension Required)\n\nIt is indeed the spiritual successor to D8Lib but unlike it, i will do way more content modding with it.",
   "friendlyName" : "Darkcraft8 Shared Files",
+  "link" : "steam://url/CommunityFilePage/3451379500",
   "name" : "d8_sharedFiles",
   "priority" : 1,
+  "steamContentId" : "3451379500",
   "tags" : "Miscellaneous",
-  "version" : "V1.0.1"
+  "version" : "V1.0.2"
 }

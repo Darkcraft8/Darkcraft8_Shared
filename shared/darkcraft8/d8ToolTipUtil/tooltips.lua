@@ -395,20 +395,20 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
         local offset = {0,0}
         offset = vec2.add(offset, root.imageSize(tooltip.gui.background.fileFooter))
         offset = vec2.add(offset, root.imageSize(tooltip.gui.background.fileBody))
-        offset = vec2.add(offset, root.imageSize(tooltip.gui.background.fileHeader))
         if vec2.sub(tooltip.gui.panefeature.offset, {-10, offset[2] - 10})[2] > 0 then
             if not pane.setPosition then
                 tooltip.gui.panefeature.offset = vec2.sub(tooltip.gui.panefeature.offset, {-10, offset[2] - 10})
             else
                 tooltip.gui.panefeature.offset = {0, 0}
-                player.setProperty("d8TooltipUtil_offset", {-10, offset[2] - 10})
+                player.setProperty("d8TooltipUtil_offset", {-10, offset[2]})
             end
-        else
+        else -- has part under the screen
+            offset[2] = offset[2] - math.abs(vec2.sub(tooltip.gui.panefeature.offset, {-10, offset[2]})[2])
             if not pane.setPosition then
-                tooltip.gui.panefeature.offset = vec2.sub(tooltip.gui.panefeature.offset, {-5, 15})
+                tooltip.gui.panefeature.offset = vec2.sub(tooltip.gui.panefeature.offset, {-10, offset[2]})
             else
                 tooltip.gui.panefeature.offset = {0, 0}
-                player.setProperty("d8TooltipUtil_offset", {-5, 15})
+                player.setProperty("d8TooltipUtil_offset", {-10, (offset[2])})
             end
         end
 

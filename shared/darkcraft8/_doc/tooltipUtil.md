@@ -1,7 +1,7 @@
 ### D8Tooltip
 
 ---
-</br>
+
 Add a new function table "D8Tooltip" comprised of function to prepare or help using tooltip.</br>
 path : "/shared/darkcraft8/d8ToolTipUtil/tooltips.lua"
 </br></br>

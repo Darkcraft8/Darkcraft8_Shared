@@ -39,10 +39,10 @@ d8SharedRenderer.init = function()
         if isLocal then
             -- Checks to see if all the required part are present
                 if not drawable then
-                    sb.logWarn("[d8SharedRenderer] addDrawable din't receive a drawable")
+                    sb.logWarn("[d8SharedRenderer] addDrawable didn't receive a drawable")
                     return false
                 elseif not identifier then
-                    sb.logWarn("[d8SharedRenderer] addDrawable din't receive an identifier")
+                    sb.logWarn("[d8SharedRenderer] addDrawable didn't receive an identifier")
                     return false
                 elseif type(drawable) ~= "table" then
                     sb.logWarn("[d8SharedRenderer] addDrawable receive a drawable of type %s, expected type table", type(drawable))
@@ -51,7 +51,7 @@ d8SharedRenderer.init = function()
                     sb.logWarn("[d8SharedRenderer] addDrawable receive an identifier of type %s, expected type string", type(identifier))
                     return false
                 elseif not playerUuid then
-                    sb.logWarn("[d8SharedRenderer] addDrawable din't receive an playerUuid")
+                    sb.logWarn("[d8SharedRenderer] addDrawable didn't receive an playerUuid")
                     return false
                 end
 
@@ -70,10 +70,10 @@ d8SharedRenderer.init = function()
         if isLocal then
             -- Checks to see if all the required part are present
                 if not identifier then
-                    sb.logWarn("[d8SharedRenderer] removeDrawable din't receive an identifier")
+                    sb.logWarn("[d8SharedRenderer] removeDrawable didn't receive an identifier")
                     return false
                 elseif not playerUuid then
-                    sb.logWarn("[d8SharedRenderer] removeDrawable din't receive an playerUuid")
+                    sb.logWarn("[d8SharedRenderer] removeDrawable didn't receive an playerUuid")
                     return false
                 end
 
@@ -89,10 +89,10 @@ d8SharedRenderer.init = function()
         if isLocal then
             -- Checks to see if all the required part are present
                 if not identifier then
-                    sb.logWarn("[d8SharedRenderer] updateDrawable din't receive an identifier")
+                    sb.logWarn("[d8SharedRenderer] updateDrawable didn't receive an identifier")
                     return false
                 elseif not playerUuid then
-                    sb.logWarn("[d8SharedRenderer] updateDrawable din't receive an playerUuid")
+                    sb.logWarn("[d8SharedRenderer] updateDrawable didn't receive an playerUuid")
                     return false
                 elseif not d8SharedRendererStorage.drawableList[playerUuid] then
                     sb.logWarn("[d8SharedRenderer] updateDrawable couldn't find a drawable list for %s, pls use addDrawable to add or set a drawable", playerUuid)
@@ -108,6 +108,22 @@ d8SharedRenderer.init = function()
             return true
         end
     end)
+
+    message.setHandler("d8SharedRenderer|hasDrawable", function(_, isLocal, identifier, playerUuid)
+        if isLocal then
+            -- Checks to see if all the required part are present
+                if not identifier then
+                    return false
+                elseif not playerUuid then
+                    return false
+                elseif not d8SharedRendererStorage.drawableList[playerUuid] then
+                    return false
+                elseif not d8SharedRendererStorage.drawableList[playerUuid][identifier] then
+                    return false
+                end
+            return true
+        end
+    end)
 end
 
 d8SharedRenderer.update = function(dt)
@@ -119,7 +135,7 @@ d8SharedRenderer.update = function(dt)
             elseif drawableType == "progressBar" then
                 local drawable = d8SharedRenderer.prepareProgressBar(cfg.drawable)
                 localAnimator.addDrawable(drawable.back, "ForegroundOverlay-1")
-                --localAnimator.addDrawable(drawable.fill, "ForegroundOverlay-1")
+                localAnimator.addDrawable(drawable.fill, "ForegroundOverlay-1")
             end
         end
     end
@@ -158,7 +174,7 @@ d8SharedRenderer.prepareProgressBar = function(drawable)
             fullbright = drawable.fullbright,
             rotation = drawable.rotation,
             transformation = drawable.transformation,
-            centered = drawable.centered,
+            centered = drawable.centered or false,
             mirrored = drawable.mirrored,
             color = drawable.color or {0, 255, 0, 255}
         }
@@ -173,7 +189,7 @@ d8SharedRenderer.prepareProgressBar = function(drawable)
         end
     end
     local fillImageSize = root.imageSize(finishedDrawables.fill.image)
-    --finishedDrawables.fill.image = finishedDrawables.fill.image .. string.format("?crop=%s;%s;%s;%s", 0, 0, fillImageSize[1] * percent, fillImageSize[2])
-    finishedDrawables.back.image = finishedDrawables.back.image .. string.format("?blendmult=%s;%s;%s", finishedDrawables.fill.image, (60 - math.floor(fillImageSize[1] * percent)), 0)
+    finishedDrawables.fill.image = finishedDrawables.fill.image .. string.format("?crop=%s;%s;%s;%s", 0, 0, fillImageSize[1] * percent, fillImageSize[2])
+    finishedDrawables.fill.position = vec2.sub(finishedDrawables.fill.position, {fillImageSize[1] / 8, 0})
     return finishedDrawables
 end

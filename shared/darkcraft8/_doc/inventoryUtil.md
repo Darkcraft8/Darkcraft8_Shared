@@ -1,8 +1,10 @@
 ### Inventory Utils
 
 ---
-</br>
-**Require access to the `player` function Table and [openStarbound][oSbLink] or a [fork][oSbLinkFork]**</br>
+
+**Require access to the `player` function Table and [openStarbound][oSbLink] or a [fork][oSbLinkFork]**
+
+
 Add the `inventory` functions table to help with reading the players inventory,</br>
 usefull for panes that need to check a player full inventory such as a crafting pane.</br></br>
 path : "/shared/darkcraft8/util/inventory.lua"
@@ -27,5 +29,4 @@ return false if there is no such item.
 ---
 
 [oSbLink]: <https://github.com/OpenStarbound/OpenStarbound> 'click here to access openStarbound Repository'
-
 [oSbLinkFork]: <https://github.com/OpenStarbound/OpenStarbound/forks> 'click here to access a list of openStarbound Forks'

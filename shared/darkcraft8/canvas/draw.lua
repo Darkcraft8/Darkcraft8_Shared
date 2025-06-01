@@ -10,26 +10,27 @@ canvasStorage.nextCamPos = {0, 0}
 canvasStorage.camZoom = 1
 
 --- particle system ---
--- Exemple
---  particleCfg = {
---      position = {0, 0},
---      velocity = {0, 1}, -- both init and current velocity
---      targetVelocity = {0, 1},
---      targetVelocityStrength = {0, 1},
---      image = "/assetmissing.png?crop=0;0;1;1?replace=ffffff00;ffffff60?border=5;f0f0f050;ffffff10",
---      timeToLive = 2,
---      timeToDestroy = 2,
---      origin = "center"
---      variant = {
---          velocity = {10, 0},
---          position = {3, 6},
---          timeToDestroy = 2.5,
---          rotation = 180
---      },
---      destructionKind = "fade",
---      color = {255, 255, 255, 255},
---      persistent = false
---  }
+--[[ Exemple
+    particleCfg = {
+        position = {0, 0},
+        velocity = {0, 1}, -- both init and current velocity
+        targetVelocity = {0, 1},
+        targetVelocityStrength = {0, 1},
+        image = "/assetmissing.png?crop=0;0;1;1?replace=ffffff00;ffffff60?border=5;f0f0f050;ffffff10",
+        timeToLive = 2,
+        timeToDestroy = 2,
+        origin = "center"
+        variant = {
+            velocity = {10, 0},
+            position = {3, 6},
+            timeToDestroy = 2.5,
+            rotation = 180
+        },
+        destructionKind = "fade",
+        color = {255, 255, 255, 255},
+        persistent = false
+    }
+]]
 canvas.addParticles = function(_particleCfgs)
     for _, particleCfg in ipairs(_particleCfgs) do 
         canvas.addParticle(particleCfg)

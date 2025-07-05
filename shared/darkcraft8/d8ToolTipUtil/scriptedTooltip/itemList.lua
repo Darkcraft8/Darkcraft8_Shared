@@ -42,9 +42,9 @@ function itemCount(descriptor)
                     name = (descriptor.name or descriptor.item or descriptor.itemName),
                     count = 1,
                     parameters = descriptor.parameters
-                })
+                }, config.getParameter("matchInputParameters", false))
             else
-                itemPlayerCount = player.hasCountOfItem(descriptor)  
+                itemPlayerCount = player.hasCountOfItem(descriptor, config.getParameter("matchInputParameters", false))  
             end
             if itemPlayerCount >= itemCount then
                 countString = "^green;" .. itemPlayerCount .. "/" .. itemCount

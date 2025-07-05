@@ -3,22 +3,20 @@ require "/scripts/vec2.lua"
 
 D8Tooltip = {} -- I wouldn't be supprised if this util become my most used one when released
 local interfaceCanvas
+local tooltipRadius
 function D8Tooltip:init()
     -- add an invisible/hidden textLabel to get the size of the whole string with the current font
-    if not widget.getSize("D8Tooltip_LblWidget") then
-        local lblWidget = {
-            type = "label",
-            position = {-100, -100},
-            hAnchor = "mid",
-            vAnchor = "mid",
-            wrapWidth = root.assetJson("/shared/darkcraft8/d8ToolTipUtil/tooltip.config").text.descriptionLabel.wrapWidth,
-            zlevel = 1
-        }
-        pane.addWidget(lblWidget, "D8Tooltip_LblWidget")
-    end
-    if interface then 
-        if interface.bindCanvas then
-            interfaceCanvas = interface.bindCanvas("d8Tooltip")
+    if widget or pane then
+        if not widget.getSize("D8Tooltip_LblWidget".."_".."default") then
+            local lblWidget = {
+                type = "label",
+                position = {-100, -100},
+                hAnchor = "mid",
+                vAnchor = "mid",
+                wrapWidth = root.assetJson("/shared/darkcraft8/d8ToolTipUtil/tooltip.config").text.descriptionLabel.wrapWidth,
+                zlevel = 1
+            }
+            pane.addWidget(lblWidget, "D8Tooltip_LblWidget".."_".."default")
         end
     end
     --
@@ -28,9 +26,9 @@ function D8Tooltip:update(dt)
     if self.tooltipCo then
         local status, message = coroutine.resume(self.tooltipCo)
     end
-    if interfaceCanvas then
-        if player.getProperty("d8TooltipUtilOpen") and pane.getSize and pane.getPosition then
-            local mousePos = interfaceCanvas:mousePosition()
+    if input then
+        if player.getProperty("d8TooltipUtilOpen") then
+            local mousePos = vec2.mul(input.mousePosition(), 0.5)
             local paneSize = pane.getSize()
             local panePos = pane.getPosition()
             local paneRect = {
@@ -45,11 +43,29 @@ function D8Tooltip:update(dt)
                 return true
             end
 
-            if not inPane(paneRect, mousePos) then
+            local dist = function (_vectorA, _vectorB)
+                if #_vectorA == #_vectorB then
+                    local x, y = (_vectorA[1] - _vectorB[1]), (_vectorA[2] - _vectorB[2])
+                    local dist = math.sqrt( (x * x) + (y * y))
+                    
+                    return dist
+                end
+            end
+            if not tooltipRadius then
+                local temp = root.assetJson("/interface.config")
+                tooltipRadius = temp.tooltip.radius
+            end
+
+            local outOfRadius = (dist(mousePos, D8Tooltip.oldMousePosition or {0, 0}) > tooltipRadius) -- disabled
+            if (not inPane(paneRect, mousePos)) then
                 player.setProperty("d8TooltipUtilOpen", false)
             end
         end
     end
+    if not mouseInPane then
+        player.setProperty("d8TooltipUtilOpen", false)
+    end
+    mouseInPane = false
 end
 
 function D8Tooltip:uninit()
@@ -57,12 +73,32 @@ function D8Tooltip:uninit()
 end
 
 function D8Tooltip:cursorOverride(mousePosition)-- simple check to close any scripted tooltip pane, made with vanilla behavior in mind
+    mouseInPane = true
     if self.oldMousePosition and not pane.setPosition then
         local diff = vec2.sub(self.oldMousePosition or {0, 0}, mousePosition)
         if math.abs(diff[1]) > 5 or math.abs(diff[2]) > 5 then 
             player.setProperty("d8TooltipUtilOpen", false)
         end
     end
+end
+
+function D8Tooltip:getStringSize(stringText, wrapWidth, fontSize, customName)
+    if not widget.getSize("D8Tooltip_LblWidget".."_".."customName" or "default") then
+        local lblWidget = {
+            type = "label",
+            position = {-100, -100},
+            hAnchor = "mid",
+            vAnchor = "mid",
+            wrapWidth = wrapWidth,
+            fontSize = fontSize,
+            zlevel = 1
+        }
+        pane.addWidget(lblWidget, "D8Tooltip_LblWidget".."_".."customName" or "default")
+    end
+    widget.setText("D8Tooltip_LblWidget".."_".."customName" or "default", stringText)
+    local stringTextSize = widget.getSize("D8Tooltip_LblWidget".."_".."customName" or "default")
+    widget.setText("D8Tooltip_LblWidget".."_".."customName" or "default", "")
+    return stringTextSize
 end
 
 function D8Tooltip:text(tooltipText)
@@ -72,25 +108,7 @@ function D8Tooltip:text(tooltipText)
         local borderSize = 1
         local borderColor = config.getParameter("tooltipCfg.borderColor", "FFFFFFff")
 
-        local getStringSize = function(stringText)
-            if not widget.getSize("D8Tooltip_LblWidget") then
-                local lblWidget = {
-                    type = "label",
-                    position = {-100, -100},
-                    hAnchor = "mid",
-                    vAnchor = "mid",
-                    wrapWidth = tooltip.descriptionLabel.wrapWidth,
-                    zlevel = 1
-                }
-                pane.addWidget(lblWidget, "D8Tooltip_LblWidget")
-            end
-
-            widget.setText("D8Tooltip_LblWidget", stringText)
-            local stringTextSize = widget.getSize("D8Tooltip_LblWidget")
-            widget.setText("D8Tooltip_LblWidget", "")
-            return stringTextSize
-        end
-        local stringTextSize = getStringSize(tooltipText)
+        local stringTextSize = D8Tooltip:getStringSize(tooltipText, tooltip.descriptionLabel.wrapWidth)
         local stringLength = string.len(string.gsub(tooltipText, '%^[^^.*;]*;', ''))
         local imageLength = 4
         local imageHeight = 4
@@ -202,9 +220,9 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
                     name = (descriptor.name or descriptor.item or descriptor.itemName),
                     count = 1,
                     parameters = cfg.parameters
-                })
+                }, override.matchInputParameters)
             else
-                itemPlayerCount = player.hasCountOfItem(descriptor)  
+                itemPlayerCount = player.hasCountOfItem(descriptor, override.matchInputParameters)  
             end
             if itemPlayerCount >= itemCount then
                 tooltip.itemList.children[name]["children"]["count"]["value"] = "^green;" .. itemPlayerCount .. "/" .. itemCount
@@ -298,7 +316,13 @@ end
 -- create and open a scripted pane instead of creating a normal tooltip
 -- this func create a item list... can be told to mimic the recipe ingredient(s) list of the vanilla crafting pane(s)
 function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroundImage)
-    if player.getProperty("d8TooltipUtilOpen") then return nil end -- stop the creation of a new pane if one is already open
+    local hideVanilla = {
+        background = {
+            type = "background",
+            fileBody = "/assetmissing.png"
+        }
+    }
+    if player.getProperty("d8TooltipUtilOpen") then return hideVanilla end -- stop the creation of a new pane if one is already open
     local vanillaConfig = root.assetJson("/interface/craftingtooltip/craftingtooltip.config")
     local override = override or {}
     local tooltip = root.assetJson("/shared/darkcraft8/d8ToolTipUtil/tooltip.config").scriptedItemList
@@ -335,7 +359,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
     end
     
     local numberOfItem = 0
-    for index, descriptor in ipairs(itemList) do
+    for index, descriptor in ipairs(itemList or {}) do
         local cfg = root.itemConfig(descriptor)
         local name = descriptor
         local itemCount = 1
@@ -357,9 +381,9 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
                         name = (descriptor.name or descriptor.item or descriptor.itemName),
                         count = 1,
                         parameters = cfg.parameters
-                    })
+                    }, override.matchInputParameters)
                 else
-                    itemPlayerCount = player.hasCountOfItem(descriptor)  
+                    itemPlayerCount = player.hasCountOfItem(descriptor, override.matchInputParameters)  
                 end
                 if itemPlayerCount >= itemCount then
                     tooltip.gui.itemList.children[name]["children"]["count"]["value"] = "^green;" .. itemPlayerCount .. "/" .. itemCount
@@ -378,7 +402,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
             item = descriptor
         }
         tooltip.mimicRecipeTooltip = override.mimicRecipeTooltip
-
+        tooltip.matchInputParameters = override.matchInputParameters
         tooltip.gui.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
         tooltip.gui.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))
 
@@ -391,6 +415,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
     tooltip.gui.itemList.rect[4] = tooltip.gui.itemList.rect[4] + (24 * numberOfItem)
 
     if not self.tooltipCo then
+        local mousePosition = vec2.mul(input.mousePosition(), 0.5)
         tooltip.gui.panefeature.offset = mousePosition
         local offset = {0,0}
         offset = vec2.add(offset, root.imageSize(tooltip.gui.background.fileFooter))
@@ -411,10 +436,11 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
                 player.setProperty("d8TooltipUtil_offset", {-10, (offset[2])})
             end
         end
-
+        
         self.tooltipCo = self:prepareScriptedTooltip(tooltip, mousePosition)
         D8Tooltip.oldMousePosition = mousePosition
     end
+    return hideVanilla
 end
 
 -- cursorOverride is given the mousePosition in the screen instead of the pane allowing coders to get the screenPosition of the cursor

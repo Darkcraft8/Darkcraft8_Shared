@@ -154,7 +154,7 @@ d8SharedRenderer.drawableType = function(drawable)
     end
 end
 
-d8SharedRenderer.prepareProgressBar = function(drawable)
+d8SharedRenderer.prepareProgressBar = function(drawable) -- Unfinished
     local finishedDrawables = {
         back = {
             image = "/interface/emptybar.png",

@@ -186,11 +186,11 @@ function json.merge(jA_A, jA_B) -- attempt to merge both json array in a similar
     return jA_A
 end
 
-function json.patch() -- do i really need to make this function ?
+function json.patch() -- do i really need to make this function ???
     
 end
 
-function json.override(_, jsonArray, override) -- prettymuch redondent except for testing, util.tableMerge does the same
+function json.override(_, jsonArray, override) -- prettymuch redondent except for testing, util.tableMerge does the same thing
     local newJson = {}
     sb.logInfo("jsonArray : %s,\n[------------] [----] override : %s", jsonArray, override)
     for var, val in pairs(override or jsonArray or {}) do

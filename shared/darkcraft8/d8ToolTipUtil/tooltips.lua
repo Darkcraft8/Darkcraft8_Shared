@@ -4,8 +4,31 @@ require "/scripts/vec2.lua"
 D8Tooltip = {} -- I wouldn't be supprised if this util become my most used one when released
 local interfaceCanvas
 local tooltipRadius
-function D8Tooltip:init()
+local paneTempID = nil
+
+function D8Tooltip:scriptTipOpen()
+    local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
+    if type(tooltipUtilOpen) ~= "table" then
+        tooltipUtilOpen = {}
+    end
+    tooltipUtilOpen[paneTempID] = true
+    player.setProperty("d8TooltipUtilOpen", tooltipUtilOpen)-- say that a tooltip is open
+end
+
+function D8Tooltip:scriptTipClosed()
+    local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
+    if type(tooltipUtilOpen) ~= "table" then
+        tooltipUtilOpen = {}
+    end
+    tooltipUtilOpen[paneTempID] = false
+    player.setProperty("d8TooltipUtilOpen", tooltipUtilOpen)-- say that a tooltip is closed or should close
+end
+
+function D8Tooltip:init(self, customIDString)
     -- add an invisible/hidden textLabel to get the size of the whole string with the current font
+    paneTempID = customIDString or sb.makeUuid()
+    D8Tooltip:scriptTipClosed()
+
     if widget or pane then
         if not widget.getSize("D8Tooltip_LblWidget".."_".."default") then
             local lblWidget = {
@@ -28,7 +51,7 @@ function D8Tooltip:update(dt)
     end
     if input then
         if player.getProperty("d8TooltipUtilOpen") then
-            local mousePos = vec2.mul(input.mousePosition(), 0.5)
+            local mousePos = vec2.mul(input.mousePosition(), 1 / interface.scale())
             local paneSize = pane.getSize()
             local panePos = pane.getPosition()
             local paneRect = {
@@ -58,26 +81,31 @@ function D8Tooltip:update(dt)
 
             local outOfRadius = (dist(mousePos, D8Tooltip.oldMousePosition or {0, 0}) > tooltipRadius) -- disabled
             if (not inPane(paneRect, mousePos)) then
-                player.setProperty("d8TooltipUtilOpen", false)
+                D8Tooltip:scriptTipClosed()
             end
         end
     end
     if not mouseInPane then
-        player.setProperty("d8TooltipUtilOpen", false)
+        D8Tooltip:scriptTipClosed()
     end
     mouseInPane = false
 end
 
 function D8Tooltip:uninit()
-    player.setProperty("d8TooltipUtilOpen", false)
+    local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
+    if type(tooltipUtilOpen) ~= "table" then
+        tooltipUtilOpen = {}
+    end
+    tooltipUtilOpen[paneTempID] = nil
+    player.setProperty("d8TooltipUtilOpen", tooltipUtilOpen)-- remove the temporary id from the list to keep the player save file small
 end
 
 function D8Tooltip:cursorOverride(mousePosition)-- simple check to close any scripted tooltip pane, made with vanilla behavior in mind
     mouseInPane = true
     if self.oldMousePosition and not pane.setPosition then
         local diff = vec2.sub(self.oldMousePosition or {0, 0}, mousePosition)
-        if math.abs(diff[1]) > 5 or math.abs(diff[2]) > 5 then 
-            player.setProperty("d8TooltipUtilOpen", false)
+        if math.abs(diff[1]) > 5 or math.abs(diff[2]) > 5 then
+            D8Tooltip:scriptTipClosed()
         end
     end
 end
@@ -322,7 +350,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
             fileBody = "/assetmissing.png"
         }
     }
-    if player.getProperty("d8TooltipUtilOpen") then return hideVanilla end -- stop the creation of a new pane if one is already open
+    if player.getProperty("d8TooltipUtilOpen")[paneTempID] then return hideVanilla end -- stop the creation of a new pane if one is already open
     local vanillaConfig = root.assetJson("/interface/craftingtooltip/craftingtooltip.config")
     local override = override or {}
     local tooltip = root.assetJson("/shared/darkcraft8/d8ToolTipUtil/tooltip.config").scriptedItemList
@@ -364,8 +392,10 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
         local name = descriptor
         local itemCount = 1
         if type(descriptor) == "table" then
-            name = index .. "|" .. (descriptor.name or descriptor.item or descriptor.itemName)
-            itemCount = descriptor.count or 1
+            local itemName = (descriptor.name or descriptor.item or descriptor.itemName or descriptor[1])
+            if not itemName then sb.logInfo("itemName not found for %s", descriptor) end
+            name = index .. "|" .. itemName
+            itemCount = descriptor.count or descriptor[2] or 1
         else
             name = index .. "|" .. name
         end
@@ -378,7 +408,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
                 local itemPlayerCount = 0
                 if type(descriptor) == "table" then
                     itemPlayerCount = player.hasCountOfItem({
-                        name = (descriptor.name or descriptor.item or descriptor.itemName),
+                        name = (descriptor.name or descriptor.item or descriptor.itemName or descriptor[1]),
                         count = 1,
                         parameters = cfg.parameters
                     }, override.matchInputParameters)
@@ -415,7 +445,7 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
     tooltip.gui.itemList.rect[4] = tooltip.gui.itemList.rect[4] + (24 * numberOfItem)
 
     if not self.tooltipCo then
-        local mousePosition = vec2.mul(input.mousePosition(), 0.5)
+        local mousePosition = vec2.mul(input.mousePosition(), 1 / interface.scale())
         tooltip.gui.panefeature.offset = mousePosition
         local offset = {0,0}
         offset = vec2.add(offset, root.imageSize(tooltip.gui.background.fileFooter))
@@ -448,18 +478,17 @@ local _cursorOverride = cursorOverride -- incase someone load the script after i
 function cursorOverride(mousePosition)
     D8Tooltip:cursorOverride(mousePosition)
     if not vec2.eq((self.mousePosition or {0, 0}), mousePosition) then self.mousePosition = mousePosition end --sb.logInfo("new mousePosition = %s", self.mousePosition)
-
-    local override
-    if _cursorOverride then override = _cursorOverride(mousePosition) end
-    return override
+    if _cursorOverride then return _cursorOverride(mousePosition) end
 end
 
 -- prepare the coroutine for the openning of the scripted Tooltip Pane
 function D8Tooltip:prepareScriptedTooltip(tooltip, mousePosition) 
     local co = coroutine.create(function(tooltip, mousePosition)
         local tooltip, mousePosition = tooltip, mousePosition
-        player.setProperty("d8TooltipUtilOpen", false) -- failsafe
+        D8Tooltip:scriptTipClosed() -- failsafe
         coroutine.yield()
+
+        if not tooltip.paneTempID then tooltip.paneTempID = paneTempID end
         player.interact("ScriptPane", tooltip)
         self.tooltipCo = nil
     end)

@@ -189,7 +189,8 @@ d8SharedRenderer.prepareProgressBar = function(drawable) -- Unfinished
         end
     end
     local fillImageSize = root.imageSize(finishedDrawables.fill.image)
+    local backImageSize = root.imageSize(finishedDrawables.back.image) -- used for position
     finishedDrawables.fill.image = finishedDrawables.fill.image .. string.format("?crop=%s;%s;%s;%s", 0, 0, fillImageSize[1] * percent, fillImageSize[2])
-    finishedDrawables.fill.position = vec2.sub(finishedDrawables.fill.position, {fillImageSize[1] / 8, 0})
+    finishedDrawables.fill.position = vec2.sub(finishedDrawables.fill.position, {backImageSize[1] / 8, 0})
     return finishedDrawables
 end

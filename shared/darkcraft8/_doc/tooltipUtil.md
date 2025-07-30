@@ -17,7 +17,7 @@ add the label widget used to get the size of string's.
 
 #### **'Tooltip' D8Tooltip.text(`String` tooltipText)**
 
-Prepare and Return a text tooltip, unlike the vanilla version this one will take into account wrapWidth and resize itself accordingly.
+Prepare and Return a text tooltip, unlike the vanilla version this one will take into account lineBreak and wrapWidth, it will resize itself accordingly.
 
 ---
 

@@ -27,24 +27,37 @@ end
 function uninit()
     if _uninit then _uninit() end
 end
-
+local itemConfig = {}
 function itemCount(descriptor)
     local countString = ""
     local itemCount = 1
+    local itemName = descriptor
     if type(descriptor) == "table" then
-        itemCount = descriptor.count or 1
+        itemName = (descriptor.name or descriptor.item or descriptor.itemName or descriptor[1])
+        itemCount = (descriptor[2] or descriptor.count) or 1
+        itemConfig[itemName] = itemConfig[itemName] or root.itemConfig(itemName)
+    else
+        itemConfig[itemName] = itemConfig[itemName] or root.itemConfig(itemName)
     end
+    
     if itemCount > 0 then
         if config.getParameter("mimicRecipeTooltip", false) then
             local itemPlayerCount = 0
             if type(descriptor) == "table" then
                 itemPlayerCount = player.hasCountOfItem({
-                    name = (descriptor.name or descriptor.item or descriptor.itemName),
+                    name = itemName,
                     count = 1,
                     parameters = descriptor.parameters
                 }, config.getParameter("matchInputParameters", false))
+                if itemConfig[itemName].config.currency or itemConfig[itemName].parameters.currency then
+                    itemPlayerCount = player.currency(itemName)
+                end
             else
                 itemPlayerCount = player.hasCountOfItem(descriptor, config.getParameter("matchInputParameters", false))  
+                
+                if itemConfig[itemName].config.currency or itemConfig[itemName].parameters.currency then
+                    itemPlayerCount = player.currency(itemName)
+                end
             end
             if itemPlayerCount >= itemCount then
                 countString = "^green;" .. itemPlayerCount .. "/" .. itemCount

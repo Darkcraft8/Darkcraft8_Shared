@@ -5,7 +5,7 @@ D8Tooltip = {} -- I wouldn't be supprised if this util become my most used one w
 local interfaceCanvas
 local tooltipRadius
 local paneTempID = nil
-
+local currenciesConfig
 function D8Tooltip:scriptTipOpen()
     local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
     if type(tooltipUtilOpen) ~= "table" then
@@ -209,10 +209,9 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
                 position = {4, 2},
                 file = "/interface/inventory/itemborder"
             },
-            itemIcon = { -- duplicate depending on the amount of inventoryIcon Drawable
+            itemIcon = {
                 type = "image",
                 position = {4, 1},
-                file = "/D8Encyclopedia/Pane/icon.png",
                 zlevel = 1,
                 centered = true,
                 minSize = {0, 0},
@@ -263,6 +262,7 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
         tooltip.itemList.children[name]["children"]["itemRarity"]["file"] = string.format("/interface/inventory/itemborder%s.png", string.lower(cfg.parameters.rarity or cfg.config.rarity))
         local inventoryIcon = cfg.parameters.inventoryIcon or cfg.config.inventoryIcon
         if type(inventoryIcon) == "table" then
+            --tooltip.itemList.children[name]["children"]["itemIcon"]["drawable"] = inventoryIcon
             local template = copy(listTemplate["children"]["itemIcon"])
             if inventoryIcon[1] ~= nil then
                 local drawableSizeInSlot = {0, 0}
@@ -325,11 +325,10 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
         else
             if string.find(inventoryIcon, "/") then -- isn't absolute
                 tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = inventoryIcon
-                tooltip.itemList.children[name]["children"]["itemIcon"]["position"] = vec2.add(listTemplate["children"]["itemIcon"]["position"], vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
             else
                 tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = cfg.directory .. inventoryIcon
-                tooltip.itemList.children[name]["children"]["itemIcon"]["position"] = vec2.add(listTemplate["children"]["itemIcon"]["position"], vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
             end
+            tooltip.itemList.children[name]["children"]["itemIcon"]["position"] = vec2.add(listTemplate["children"]["itemIcon"]["position"], vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
         end
         tooltip.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
         tooltip.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))
@@ -387,57 +386,96 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
     end
     
     local numberOfItem = 0
-    for index, descriptor in ipairs(itemList or {}) do
-        local cfg = root.itemConfig(descriptor)
-        local name = descriptor
-        local itemCount = 1
-        if type(descriptor) == "table" then
-            local itemName = (descriptor.name or descriptor.item or descriptor.itemName or descriptor[1])
-            if not itemName then sb.logInfo("itemName not found for %s", descriptor) end
-            name = index .. "|" .. itemName
-            itemCount = descriptor.count or descriptor[2] or 1
-        else
-            name = index .. "|" .. name
-        end
-        tooltip.gui.itemList.children[name] = copy(listTemplate)
+    local currencyInputs = {}
+    local itemName = function(itemDescriptor)
+        if type(itemDescriptor) == "string" then return itemDescriptor end
+        return itemDescriptor.item or itemDescriptor.name or itemDescriptor.itemName or itemDescriptor[1]
+    end
 
-        tooltip.gui.itemList.children[name]["children"]["itemName"]["value"] = (cfg.parameters.shortdescription or cfg.config.shortdescription)
-        
-        if itemCount > 0 then
-            if override.mimicRecipeTooltip then
-                local itemPlayerCount = 0
-                if type(descriptor) == "table" then
-                    itemPlayerCount = player.hasCountOfItem({
-                        name = (descriptor.name or descriptor.item or descriptor.itemName or descriptor[1]),
-                        count = 1,
-                        parameters = cfg.parameters
-                    }, override.matchInputParameters)
-                else
-                    itemPlayerCount = player.hasCountOfItem(descriptor, override.matchInputParameters)  
+    if itemList.input then
+        if not currenciesConfig then currenciesConfig = root.assetJson("/currencies.config") end
+        currencyInputs = copy(itemList.currencyInputs)
+        itemList = copy(itemList.input)
+        for currency, amount in pairs(currencyInputs) do 
+            local representativeItem = currenciesConfig[currency]["representativeItem"]
+            local added = false
+            for index, descriptor in pairs(itemList or {}) do
+                if itemName(descriptor) == representativeItem then
+                    added = true
+                    itemList[index] = {
+                        name = itemName(descriptor),
+                        count = (descriptor.count or descriptor[2]) + amount,
+                        parameters = descriptor.parameters or descriptor[3]
+                    }
+                    break
                 end
-                if itemPlayerCount >= itemCount then
-                    tooltip.gui.itemList.children[name]["children"]["count"]["value"] = "^green;" .. itemPlayerCount .. "/" .. itemCount
+            end
+            if not added then
+                table.insert(itemList, {
+                    name = currency,
+                    count = amount
+                })
+            end
+        end
+    end
+
+    for index, descriptor in pairs(itemList or {}) do
+        if itemName(descriptor) then
+            local cfg = root.itemConfig(descriptor)
+            local name = descriptor
+            local itemCount = 1
+            if type(descriptor) == "table" then
+                local itemName = itemName(descriptor)
+                if not itemName then sb.logInfo("itemName not found for %s", descriptor) end
+                name = index .. "|" .. itemName
+                itemCount = descriptor.count or descriptor[2] or 1
+            else
+                name = index .. "|" .. name
+            end
+            tooltip.gui.itemList.children[name] = copy(listTemplate)
+
+            tooltip.gui.itemList.children[name]["children"]["itemName"]["value"] = (cfg.parameters.shortdescription or cfg.config.shortdescription)
+            
+            if itemCount > 0 then
+                if override.mimicRecipeTooltip then
+                    local itemPlayerCount = 0
+                    if type(descriptor) == "table" then
+                        itemPlayerCount = player.hasCountOfItem({
+                            name = itemName(descriptor),
+                            count = 1,
+                            parameters = cfg.parameters
+                        }, override.matchInputParameters)
+                    else
+                        itemPlayerCount = player.hasCountOfItem(descriptor, override.matchInputParameters)  
+                    end
+                    if itemPlayerCount >= itemCount then
+                        tooltip.gui.itemList.children[name]["children"]["count"]["value"] = "^green;" .. itemPlayerCount .. "/" .. itemCount
+                    else
+                        tooltip.gui.itemList.children[name]["children"]["count"]["value"] = "^red;" .. itemPlayerCount .. "/" .. itemCount
+                    end
                 else
-                    tooltip.gui.itemList.children[name]["children"]["count"]["value"] = "^red;" .. itemPlayerCount .. "/" .. itemCount
+                    tooltip.gui.itemList.children[name]["children"]["count"]["value"] = tostring(itemCount)
                 end
             else
-                tooltip.gui.itemList.children[name]["children"]["count"]["value"] = tostring(itemCount)
+                tooltip.gui.itemList.children[name]["children"]["count"]["value"] = ""
             end
-        else
-            tooltip.gui.itemList.children[name]["children"]["count"]["value"] = ""
+
+            tooltip.itemSlotList[name] = {
+                path = "itemList." .. name,
+                item = descriptor
+            }
+            tooltip.mimicRecipeTooltip = override.mimicRecipeTooltip
+            tooltip.matchInputParameters = override.matchInputParameters
+            tooltip.gui.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
+            tooltip.gui.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))
+
+
+            numberOfItem = numberOfItem + 1
+            if itemCount == 0 and override.mimicRecipeTooltip then
+                tooltip.gui.itemList.children[name] = nil
+                numberOfItem = numberOfItem - 1
+            end
         end
-
-        tooltip.itemSlotList[name] = {
-            path = "itemList." .. name,
-            item = descriptor
-        }
-        tooltip.mimicRecipeTooltip = override.mimicRecipeTooltip
-        tooltip.matchInputParameters = override.matchInputParameters
-        tooltip.gui.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
-        tooltip.gui.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))
-
-
-        numberOfItem = numberOfItem + 1
     end
     local bodyHeight = (22 * numberOfItem)
     tooltip.gui.background.fileBody = tooltip.gui.background.fileBody .. "?scalenearest=1;" .. 2 + bodyHeight -- 38

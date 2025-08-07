@@ -5,5 +5,13 @@
       "path" : "/deploymentConfig/scripts/-",
       "value" : "/shared/darkcraft8/localScript/deployment/renderer.lua"
     }
+  ],
+  
+  [
+    { 
+      "op" : "add",
+      "path" : "/genericScriptContexts/d8Shared_tooltip",
+      "value" : "/shared/darkcraft8/d8ToolTipUtil/player.lua"
+    }
   ]
 ]

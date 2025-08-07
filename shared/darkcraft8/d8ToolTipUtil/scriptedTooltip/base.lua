@@ -12,6 +12,15 @@ function sayToParentThatItOpen()
     player.setProperty("d8TooltipUtilOpen", tooltipUtilOpen)-- say that a tooltip is open
 end
 
+function sayToParentThatItClosed()
+    local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
+    if type(tooltipUtilOpen) ~= "table" then
+        tooltipUtilOpen = {}
+    end
+    tooltipUtilOpen[paneTempID] = false
+    player.setProperty("d8TooltipUtilOpen", tooltipUtilOpen)-- say that a tooltip is open
+end
+
 function shouldBeClosed()
     local tooltipUtilOpen = player.getProperty("d8TooltipUtilOpen")
     if type(tooltipUtilOpen) ~= "table" then
@@ -38,7 +47,7 @@ function init()
 end
 
 function update(dt)
-    if shouldBeClosed() then pane.dismiss() end
+    if shouldBeClosed() then pane.dismiss() return end
     if pane.setPosition then
         local cursorPos = player.getProperty("d8TooltipUtilCursorPos")
         local screenSize
@@ -52,6 +61,10 @@ function update(dt)
     
 end
 
-function uninit()
+function dismissed()
+    sayToParentThatItClosed()
+end
 
+function uninit()
+    pane.dismiss()
 end

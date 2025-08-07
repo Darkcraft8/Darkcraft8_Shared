@@ -1,28 +1,26 @@
 require "/shared/darkcraft8/util/rectUtils.lua"
 require "/shared/darkcraft8/canvas/draw.lua"
 
-if not canvas then canvas = {} end
-if not canvasStorage then canvasStorage = {} end
 canvasStorage.clickCallbacks = canvasStorage.clickCallbacks or {}
 canvasStorage.keyCallbacks = canvasStorage.keyCallbacks or {}
 
-canvas.bindCanvas = function(canvasWidgetName)
+canvas.bindCanvas = function(self, canvasWidgetName)
     if not canvasWidgetName then return false, "no canvas widget name given" end
-    canvas.setCanvas(canvasWidgetName)
+    canvas:setCanvas(canvasWidgetName)
     if not canvasStorage.widget then return false, "couldn't bind the given canvas" end
 
     _ENV[config.getParameter("canvasClickCallbacks")[canvasWidgetName]] = function(position, mouseButton, isButtonDown) 
-        canvas.clickCallback(position, mouseButton, isButtonDown)
+        canvas:clickCallback(position, mouseButton, isButtonDown)
     end
 
     _ENV[config.getParameter("canvasKeyCallbacks")[canvasWidgetName]] = function(keyIndex, isDown)
-        canvas.keyCallback(keyIndex, isDown)
+        canvas:keyCallback(keyIndex, isDown)
     end
 
     return true
 end
 
-canvas.buttonUpd = function(_, dt)
+canvas.buttonUpd = function(self, dt)
     if canvasStorage.btn then 
         canvasStorage.overredBtn = nil
         if canvasStorage.btn.btnTable then
@@ -89,7 +87,7 @@ canvas.buttonUpd = function(_, dt)
     end
 end
 
-canvas.clickCallback = function(position, mouseButton, isButtonDown)
+canvas.clickCallback = function(self, position, mouseButton, isButtonDown)
     --sb.logInfo("%s, %s, %s", position, mouseButton, isButtonDown)
     if isButtonDown then
         if canvasStorage.overredBtn then
@@ -117,7 +115,7 @@ canvas.clickCallback = function(position, mouseButton, isButtonDown)
     end
 end
 
-canvas.keyCallback = function(keyIndex, isDown)
+canvas.keyCallback = function(self, keyIndex, isDown)
     --sb.logInfo("%s, %s", keyIndex, isDown)
     if not keyboard then 
         for _, callback in ipairs(canvasStorage.keyCallbacks or {}) do 

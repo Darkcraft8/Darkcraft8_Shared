@@ -3,8 +3,6 @@ require "/scripts/vec2.lua"
 require "/scripts/interp.lua"
 require "/shared/darkcraft8/canvas/base.lua"
 
-if not canvas then canvas = {} end
-if not canvasStorage then canvasStorage = {} end
 canvasStorage.camPos = {0, 0}
 canvasStorage.nextCamPos = {0, 0}
 canvasStorage.camZoom = 1
@@ -31,12 +29,12 @@ canvasStorage.camZoom = 1
         persistent = false
     }
 ]]
-canvas.addParticles = function(_particleCfgs)
+canvas.addParticles = function(self, _particleCfgs)
     for _, particleCfg in ipairs(_particleCfgs) do 
-        canvas.addParticle(particleCfg)
+        canvas:addParticle(particleCfg)
     end
 end
-canvas.addParticle = function(_particleCfg)
+canvas.addParticle = function(self, _particleCfg)
     if not canvasStorage.particle then canvasStorage.particle = {} end
     if _particleCfg then
         local particleCfg = copy(_particleCfg)
@@ -46,7 +44,7 @@ canvas.addParticle = function(_particleCfg)
             newIndex = newIndex + 1
         end
         if newIndex < 1000 then
-            local posOffset = canvas.anchor(particleCfg.origin)
+            local posOffset = canvas:anchor(particleCfg.origin)
             particleCfg.position = vec2.add(particleCfg.position, posOffset)
             -- Variant --- should change so that it check for the type instead of a specific name
             for param, value in pairs(particleCfg.variant) do 
@@ -66,9 +64,9 @@ canvas.addParticle = function(_particleCfg)
     end
 end
 
-canvas.removeParticle = function(index) table.remove(canvasStorage.particle, index) end
-canvas.clearParticles = function() canvasStorage.particle = {} end
-canvas.updateParticle = function(particleCfg, index)    
+canvas.removeParticle = function(self, index) table.remove(canvasStorage.particle, index) end
+canvas.clearParticles = function(self) canvasStorage.particle = {} end
+canvas.updateParticle = function(self, particleCfg, index)    
     if particleCfg.velocity then
         if particleCfg.targetVel[1] ~= particleCfg.velocity[1] then
             local progress = math.min(1.0, 1 - util.clamp(math.abs((particleCfg.targetVel[1] - particleCfg.velocity[1])), 0, 0.99))
@@ -87,7 +85,7 @@ canvas.updateParticle = function(particleCfg, index)
     end
 
     local shouldRemove = function(particleCfg)
-        local visible = canvas.isVisible(particleCfg.image, particleCfg.position)
+        local visible = canvas:isVisible(particleCfg.image, particleCfg.position)
         local remove = false
         if particleCfg.position[1] < 0 or particleCfg.position[2] < 0 or particleCfg.position[1] > canvas:size()[1] or particleCfg.position[2] > canvas:size()[2] then
             remove = true
@@ -179,7 +177,7 @@ canvas.updateParticle = function(particleCfg, index)
                     particleCfg.scale = scale
                 end
             elseif particleCfg.destructionKind == "particle" then
-                canvas.addParticle(particleCfg.particleCfg)
+                canvas:addParticle(particleCfg.particleCfg)
             end
         end
 
@@ -191,7 +189,7 @@ canvas.updateParticle = function(particleCfg, index)
     if shouldRemove(particleCfg) then
         if index then
             canvasStorage.particle[index] = false
-            coroutine.resume(coroutine.create(function(index) canvas.removeParticle(index) end), index)
+            coroutine.resume(coroutine.create(function(index) canvas:removeParticle(index) end), index)
         end
         return false
     else
@@ -199,11 +197,11 @@ canvas.updateParticle = function(particleCfg, index)
     end
 end
 
-canvas.shouldRender = function()
+canvas.shouldRender = function(self)
 
 end
 
-canvas.drawParticles = function() -- a small premade function to draw particles
+canvas.drawParticles = function(self) -- a small premade function to draw particles
     if not canvasStorage.particle then return end
     if #canvasStorage.particle == 0 then return end
 
@@ -213,7 +211,7 @@ canvas.drawParticles = function() -- a small premade function to draw particles
             local color = {255, 255, 255, 255}
             local scale = 1
 
-            local particleCfg = canvas.updateParticle(particleCfg, i)
+            local particleCfg = canvas:updateParticle(particleCfg, i)
             if particleCfg then
                 if canvasStorage.debug then
                     local text = "tTL : " .. math.floor(particleCfg.timeToLive)
@@ -225,7 +223,7 @@ canvas.drawParticles = function() -- a small premade function to draw particles
                     }
                     canvas:drawText(text, textPositioning, 4, {255, 255, 255})
                 end
-                canvas:drawImageDrawable(particleCfg.image or "/assetmissing.png", canvas.translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0), particleCfg.scale or scale, particleCfg.color or color, particleCfg.rotation or 0)
+                canvas:drawImageDrawable(particleCfg.image or "/assetmissing.png", canvas:translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0), particleCfg.scale or scale, particleCfg.color or color, particleCfg.rotation or 0)
                 canvasStorage.particle[i] = particleCfg
             end
         end
@@ -238,13 +236,13 @@ canvas.drawParticles = function() -- a small premade function to draw particles
             verticalAnchor = "mid", -- top, mid, bottom
             wrapWidth = nil -- wrap width in pixels or nil
         }
-        textPositioning.position = vec2.add(textPositioning.position, canvas.anchor("topLeft"))
+        textPositioning.position = vec2.add(textPositioning.position, canvas:anchor("topLeft"))
         canvas:drawText(text, textPositioning, 7, {255, 255, 255})
     end
 end
 
 --- util ---
-canvas.anchor = function(anchor)
+canvas.anchor = function(self, anchor)
     if type(anchor) == "string" then
         if anchor == "none"          then return {0, 0}                                            end
         if anchor == "bottomLeft"    then return {0, 0}                                            end
@@ -260,7 +258,7 @@ canvas.anchor = function(anchor)
     end
 end
 
-canvas.isVisible = function(image, position)
+canvas.isVisible = function(self, image, position)
     local visiblePos = rect.zero()
     visiblePos[3] = visiblePos[3] + root.imageSize(image)[1]
     visiblePos[4] = visiblePos[4] + root.imageSize(image)[2]
@@ -279,7 +277,7 @@ canvas.isVisible = function(image, position)
     
 end
 
-canvas.translateFromCamera = function(position, zoom, parallax)
+canvas.translateFromCamera = function(self, position, zoom, parallax)
     local position, zoom, parallax = position, (zoom or canvasStorage.camZoom), parallax
     if not parallax then parallax = 1 end
     local parallaxPercent = (parallax / (1 + zoom))
@@ -296,7 +294,7 @@ canvas.translateFromCamera = function(position, zoom, parallax)
     return vec2.add(position, effectivePosition)
 end
 
-canvas.cameraDrag = function()
+canvas.cameraDrag = function(self)
     -- Simple Camera Drag System --
     if canvasStorage.dragCam then 
         canvasStorage.dragNew = canvas:mousePosition()
@@ -317,7 +315,7 @@ canvas.cameraDrag = function()
     end
 end
 
-canvas.linearTransitionToNextCamPos = function(_, camSpeed)
+canvas.linearTransitionToNextCamPos = function(self, camSpeed)
     -- Linear Transition from current Camera position to the next --
     if not vec2.eq(canvasStorage.nextCamPos, canvasStorage.camPos) then
         local dist = vec2.sub(canvasStorage.camPos, canvasStorage.nextCamPos)

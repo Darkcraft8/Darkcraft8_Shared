@@ -3,6 +3,8 @@ require "/shared/darkcraft8/d8ToolTipUtil/scriptedTooltip/base.lua"
 local _init = init
 local _update = update
 local _uninit = uninit
+local _dismissed = dismissed
+
 function init()
     if _init then _init() end
     for _, cfg in pairs(config.getParameter("itemSlotList", {})) do -- set itemIcon Slot
@@ -24,9 +26,14 @@ function update(dt)
     end
 end
 
+function dismissed()
+    if _dismissed then _dismissed() end
+end
+
 function uninit()
     if _uninit then _uninit() end
 end
+
 local itemConfig = {}
 function itemCount(descriptor)
     local countString = ""

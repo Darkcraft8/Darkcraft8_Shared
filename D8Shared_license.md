@@ -3,10 +3,12 @@
 ### This License Doesn't Take Precedent Over Chucklefish Mod Terms [Chucklefish Mod Terms][def2]
 
 #### In this Context The following refer
+- "Content"
+    the files and folders of Darkcraft8 Shared Files
 - "Developer"
     refer to the developer of the [content][developer]
 - "You"
-    refer to the individual or group viewing/using or reading this license
+    refer to the individual or group viewing/reading this license or using the file of the content
 
 #### You may put those shared file in your mod if you follow the following
  - Respect Chucklefish Mod Terms

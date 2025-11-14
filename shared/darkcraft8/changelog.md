@@ -1,7 +1,7 @@
 ### 1.2.0
 
 #### Tooltip Util
-- renamed `vanillaBasedItemList` to `itemList` and ehanced the tooltip creation system, it should now look almost identical to the crafting pane ingredient tooltip
+- renamed `vanillaBasedItemList` to `itemList` and enhanced the tooltip creation system, it should now look almost identical to the crafting pane ingredient tooltip
 
 
 #### Canvas Util

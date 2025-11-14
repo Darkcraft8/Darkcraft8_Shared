@@ -1,8 +1,12 @@
 -- Require openStarbound and access to the player table
 inventory = inventory or {}
 
--- return a array that contain two different array one containing only the count of the item based on their itemName --
--- the other containing the count of the item based on their stringified descriptor --
+--[[
+ return a array that contain two different array one containing only the count of the item based on their itemName
+ the other containing the count of the item based on their stringified descriptor
+ this function shouldn't be called at every update and should be used sparingly... hopefully openStarbound will add a proper function to see the normalized content of the player inventory
+ if planning to implement recipe input check i suggest looking at arlmenarum system recipe utils
+]]
 inventory.normalize = function()
     local normalizedInv = {
         soft = {},

@@ -141,6 +141,9 @@ function D8Tooltip:text(tooltipText)
         local imageLength = 4
         local imageHeight = 4
         local imageTexturePath = "/interface/rightBarTooltipBg.png?crop;1;1;2;2?scalenearest=%s;%s?border=%s;%s;%s"
+        if config.getParameter("tooltipCfg.backgroundColor") then
+            imageTexturePath = imageTexturePath .. "?replace;000000a8="..config.getParameter("tooltipCfg.backgroundColor")
+        end
         local extendedLength = imageLength + stringTextSize[1]--(1 + borderSize) + (4.25 * (stringLength))
         local extendedHeight = imageHeight + stringTextSize[2]
         
@@ -153,8 +156,10 @@ function D8Tooltip:text(tooltipText)
     
     return
 end
--- older sibling to scriptedItemList that doesn't open a scripted pane but item icon's are less pretty/accurate.
-function D8Tooltip:vanillaBasedItemList(itemList, override)
+-- older sibling to scriptedItemList that doesn't open a scripted pane... got a visual update, should look extremely close to vanilla
+function D8Tooltip:itemList(itemList, override)
+    require "/shared/darkcraft8/util/item.lua"
+    local vanillaConfig = root.assetJson("/interface/craftingtooltip/craftingtooltip.config")
     local tooltip = {
         panefeature = {
             type = "panefeature",
@@ -162,11 +167,11 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
         },
         background = {
             type = "background",
-            fileHeader = "/interface/craftingtooltip/header.png",
-            fileBody = "/interface/craftingtooltip/body.png",
-            fileFooter = "/interface/craftingtooltip/footer.png"
+            fileHeader = vanillaConfig.background.stretchSet["end"] or "/interface/craftingtooltip/header.png",
+            fileBody = vanillaConfig.background.stretchSet["inner"] or "/interface/craftingtooltip/body.png",
+            fileFooter = vanillaConfig.background.stretchSet["begin"] or "/interface/craftingtooltip/footer.png"
         },
-        title = {
+        title = vanillaConfig.title or {
             type = "label",
             position = {76, 33}, -- Height of itemList is added to this y position
             hAnchor = "mid",
@@ -177,25 +182,26 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
         itemList = {
             type = "layout",
             layoutType = "basic",
-            rect = {0, 21, 145, 22}, -- Max Height should be increased based on the amount of item descriptor
+            rect = {0, 21, 145, 22}, -- Max Height should be increased based on the amount of items
             position = {0, 0},
             children = {
             }
         }
     }
+    
     local pathTemplate = "itemList.children" .. ""
     local listTemplate = {
         type = "layout",
         layoutType = "basic",
         rect = {0, 0, 145, 22}, -- both Height should be increased based on the amount of item descriptor
         children = {
-            backgroundImg = {
+            backgroundImg = vanillaConfig.itemList.schema.listTemplate.background or {
                 type = "image",
                 file = "/interface/craftingtooltip/listitem.png",
                 position = {1, 0},
                 zlevel = -1
             },
-            itemName = {
+            itemName = vanillaConfig.itemList.schema.listTemplate.itemName or {
                 type = "label",
                 position = {27, 11},
                 hAnchor = "left",
@@ -206,27 +212,61 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
             },
             itemRarity = {
                 type = "image",
-                position = {4, 2},
+                position = vanillaConfig.itemList.schema.listTemplate.itemIcon.position or {4, 2},
                 file = "/interface/inventory/itemborder"
             },
             itemIcon = {
                 type = "image",
-                position = {4, 1},
+                position = vec2.add(vanillaConfig.itemList.schema.listTemplate.itemIcon.position or {4, 2}, {9, 9}),
                 zlevel = 1,
                 centered = true,
                 minSize = {0, 0},
                 maxSize = {18, 18}
-            },
-            count = {
+            }, 
+            count = vanillaConfig.itemList.schema.listTemplate.count or {
                 type = "label",
-                position = {134, 7},
+                position = {117, 7},
                 hAnchor = "right",
                 value = "404"
             }
         }
     }
-    tooltip.title.value = override.title or "ITEM"
+    --sb.logInfo("listTemplate %s", sb.printJson(listTemplate, 1))
+    tooltip.title.value = override.title or vanillaConfig.title.value or "ITEM"
     local numberOfItem = 0
+    local currencyInputs = {}
+    local itemName = function(itemDescriptor)
+        if type(itemDescriptor) == "string" then return itemDescriptor end
+        return itemDescriptor.item or itemDescriptor.name or itemDescriptor.itemName or itemDescriptor[1]
+    end
+
+    if itemList.input then
+        if not currenciesConfig then currenciesConfig = root.assetJson("/currencies.config") end
+        currencyInputs = copy(itemList.currencyInputs)
+        itemList = copy(itemList.input)
+        for currency, amount in pairs(currencyInputs) do 
+            local representativeItem = currenciesConfig[currency]["representativeItem"]
+            local added = false
+            for index, descriptor in pairs(itemList or {}) do
+                if itemName(descriptor) == representativeItem then
+                    added = true
+                    itemList[index] = {
+                        name = itemName(descriptor),
+                        count = (descriptor.count or descriptor[2]) + amount,
+                        parameters = descriptor.parameters or descriptor[3]
+                    }
+                    break
+                end
+            end
+            if not added then
+                table.insert(itemList, {
+                    name = currency,
+                    count = amount
+                })
+            end
+        end
+    end
+
     for index, descriptor in ipairs(itemList) do
         local cfg = root.itemConfig(descriptor)
         local name = descriptor
@@ -238,8 +278,10 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
             name = index .. "|" .. name
         end
         tooltip.itemList.children[name] = copy(listTemplate)
-
-        tooltip.itemList.children[name]["children"]["itemName"]["value"] = (cfg.parameters.shortdescription or cfg.config.shortdescription)
+        local configParameter = function(paramName, defaultValue)
+            return cfg.parameters[paramName] or cfg.config[paramName] or defaultValue
+        end
+        tooltip.itemList.children[name]["children"]["itemName"]["value"] = configParameter("shortdescription")
         if override.mimicRecipeTooltip then
             local itemPlayerCount = 0
             if type(descriptor) == "table" then
@@ -258,78 +300,53 @@ function D8Tooltip:vanillaBasedItemList(itemList, override)
             end
         else
             tooltip.itemList.children[name]["children"]["count"]["value"] = tostring(itemCount)
+            if tonumber(tooltip.itemList.children[name]["children"]["count"]["value"]) <= 0 then tooltip.itemList.children[name]["children"]["count"]["visible"] = false end
         end
-        tooltip.itemList.children[name]["children"]["itemRarity"]["file"] = string.format("/interface/inventory/itemborder%s.png", string.lower(cfg.parameters.rarity or cfg.config.rarity))
-        local inventoryIcon = cfg.parameters.inventoryIcon or cfg.config.inventoryIcon
+        tooltip.itemList.children[name]["children"]["itemRarity"]["file"] = string.format("/interface/inventory/itemborder%s.png", string.lower(configParameter("rarity")))
+        local invIcon = root.getItemIcon(descriptor, true)
+        if type(invIcon) == "table" then
+            tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = nil
+            tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"] = invIcon
+        else
+            tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = invIcon
+        end
+        --[[
+        local inventoryIcon = configParameter("inventoryIcon") or configParameter("codexIcon")
+        local colorOptions = configParameter("colorOptions")
+        local colorDirective = ""
+        if colorOptions then
+            colorDirective = "?replace"
+            for a, b in pairs(colorOptions[configParameter("colorIndex", 1)]) do 
+                colorDirective = colorDirective .. "=" .. a .. ";" .. b
+            end
+        end
         if type(inventoryIcon) == "table" then
-            --tooltip.itemList.children[name]["children"]["itemIcon"]["drawable"] = inventoryIcon
-            local template = copy(listTemplate["children"]["itemIcon"])
-            if inventoryIcon[1] ~= nil then
-                local drawableSizeInSlot = {0, 0}
-                for index, drawable in ipairs(inventoryIcon) do 
-                    local image = drawable.image or ""
-                    if not string.find(image, "/") then image = cfg.directory .. drawable.image end
-                    local imageSize = root.imageSize(image)                    
-                    if drawable.position then imageSize = vec2.add(imageSize, drawable.position) end
-
-                    if drawableSizeInSlot[1] < imageSize[1] then drawableSizeInSlot[1] = imageSize[1] end
-                    if drawableSizeInSlot[2] < imageSize[2] then drawableSizeInSlot[2] = imageSize[2] end
+            tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = nil
+            tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"] = copy(inventoryIcon)
+            for index, icon in pairs(tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"] or {}) do 
+                if (string.find(icon["image"], "/") == 1) then
+                    tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"][index]["image"] = icon["image"]
+                else -- isn't absolute
+                    tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"][index]["image"] = cfg.directory .. icon["image"]
                 end
-                for index, drawable in ipairs(inventoryIcon) do 
-                    if index == 1 then
-                        local image = drawable.image or ""
-                        if not string.find(image, "/") then image = cfg.directory .. drawable.image end
-                        local pos = copy(listTemplate["children"]["itemIcon"]["position"])
-                        if drawable.position then pos = vec2.add(pos, drawable.position) end
-                        pos = vec2.add(pos, vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
-
-                        if (drawableSizeInSlot[1] > 16) or (drawableSizeInSlot[2] > 16) then
-                            pos = copy(listTemplate["children"]["itemIcon"]["position"])
-                            if drawable.position then pos = vec2.add(pos, drawable.position) end
-                            local imageSize = root.imageSize(image)
-                            imageSize = vec2.mul(imageSize, {0.125, 0})
-                            local slotSize = vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2)
-                            pos = vec2.add(pos, {math.abs(pos[1] - slotSize[1]), 0})
-
-                            tooltip.itemList.children[name]["children"]["itemIcon"]["centered"] = false
-                            tooltip.itemList.children[name]["children"]["itemIcon"]["maxSize"] = {22, 22}
-                        end
-                        tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = image 
-                        tooltip.itemList.children[name]["children"]["itemIcon"]["position"] = pos
-                    else
-                        tooltip.itemList.children[name]["children"]["itemIcon" .. index] = template
-                        local image = drawable.image or ""
-                        if not string.find(image, "/") then image = cfg.directory .. drawable.image end
-                        local pos = copy(listTemplate["children"]["itemIcon"]["position"])
-                        if drawable.position then pos = vec2.add(pos, drawable.position) end
-                        pos = vec2.add(pos, vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
-                        
-                        if (drawableSizeInSlot[1] > 16) or (drawableSizeInSlot[2] > 16) then
-                            pos = copy(listTemplate["children"]["itemIcon"]["position"])
-                            if drawable.position then pos = vec2.add(pos, drawable.position) end
-                            local imageSize = root.imageSize(image)
-                            imageSize = vec2.mul(imageSize, {0.125, 0})
-                            local slotSize = vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2)
-                            pos = vec2.add(pos, {math.abs(pos[1] - slotSize[1]), 0})
-                            
-                            tooltip.itemList.children[name]["children"]["itemIcon" .. index]["centered"] = false
-                            tooltip.itemList.children[name]["children"]["itemIcon" .. index]["maxSize"] = {22, 22}
-                        end
-
-                        tooltip.itemList.children[name]["children"]["itemIcon" .. index]["file"] = image
-                        tooltip.itemList.children[name]["children"]["itemIcon" .. index]["position"] = pos
-                        tooltip.itemList.children[name]["children"]["itemIcon" .. index]["zlevel"] = tooltip.itemList.children[name]["children"]["itemIcon" .. index]["zlevel"] + index
-                    end
+                if colorOptions then
+                    tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"][index]["image"] = tooltip.itemList.children[name]["children"]["itemIcon"]["drawables"][index]["image"] .. colorDirective
                 end
             end
-        else
-            if string.find(inventoryIcon, "/") then -- isn't absolute
+        elseif type(inventoryIcon) == "string" then
+            if (string.find(inventoryIcon, "/") == 1) then
                 tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = inventoryIcon
-            else
+            else -- isn't absolute
                 tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = cfg.directory .. inventoryIcon
             end
-            tooltip.itemList.children[name]["children"]["itemIcon"]["position"] = vec2.add(listTemplate["children"]["itemIcon"]["position"], vec2.div(root.imageSize(tooltip.itemList.children[name]["children"]["itemRarity"]["file"]), 2))
+            if colorOptions then
+                tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = tooltip.itemList.children[name]["children"]["itemIcon"]["file"] .. colorDirective
+            end
+        else
+            sb.logInfo("missing icon for %s", name)
+            tooltip.itemList.children[name]["children"]["itemIcon"]["file"] = root.assetJson("/items/defaultparameters.config").missingIcon
         end
+        ]]
         tooltip.itemList.children[name]["rect"][2] = (22 * (#itemList - (numberOfItem + 1)))
         tooltip.itemList.children[name]["rect"][4] =  22 + (22 * (#itemList - (numberOfItem + 1)))
         numberOfItem = numberOfItem + 1

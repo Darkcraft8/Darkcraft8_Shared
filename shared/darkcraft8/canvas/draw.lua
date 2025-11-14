@@ -44,10 +44,10 @@ canvas.addParticle = function(self, _particleCfg)
             newIndex = newIndex + 1
         end
         if newIndex < 1000 then
-            local posOffset = canvas:anchor(particleCfg.origin)
+            local posOffset = canvas:anchor(particleCfg.origin or "center")
             particleCfg.position = vec2.add(particleCfg.position, posOffset)
             -- Variant --- should change so that it check for the type instead of a specific name
-            for param, value in pairs(particleCfg.variant) do 
+            for param, value in pairs(particleCfg.variant or {}) do 
                 if type(value) == "number" then
                     particleCfg[param] = (particleCfg[param] or 0) + util.randomInRange({-value, value})
                 elseif type(value) == "table" then
@@ -66,7 +66,7 @@ end
 
 canvas.removeParticle = function(self, index) table.remove(canvasStorage.particle, index) end
 canvas.clearParticles = function(self) canvasStorage.particle = {} end
-canvas.updateParticle = function(self, particleCfg, index)    
+canvas.updateParticle = function(self, particleCfg, index)
     if particleCfg.velocity then
         if particleCfg.targetVel[1] ~= particleCfg.velocity[1] then
             local progress = math.min(1.0, 1 - util.clamp(math.abs((particleCfg.targetVel[1] - particleCfg.velocity[1])), 0, 0.99))
@@ -86,6 +86,9 @@ canvas.updateParticle = function(self, particleCfg, index)
 
     local shouldRemove = function(particleCfg)
         local visible = canvas:isVisible(particleCfg.image, particleCfg.position)
+        if not particleCfg.positionLocked then
+            visible = canvas:isVisible(particleCfg.image, canvas:translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0))
+        end
         local remove = false
         if particleCfg.position[1] < 0 or particleCfg.position[2] < 0 or particleCfg.position[1] > canvas:size()[1] or particleCfg.position[2] > canvas:size()[2] then
             remove = true
@@ -142,7 +145,7 @@ canvas.updateParticle = function(self, particleCfg, index)
                 end
             elseif particleCfg.destructionKind == "shrinkAndFade" then
                 local scale = (particleCfg.scale or scale)
-                if scale ~= 0 then
+                if scale > 0 then
                     local progress = math.min(1.0, 1 - util.clamp(math.abs(( 0 - scale )), 0, 0.99))
                     scale = interp.sin((progress / (particleCfg.desctructionTime + 1) ) / 1.25, scale, 0)
                     particleCfg.scale = scale
@@ -181,9 +184,8 @@ canvas.updateParticle = function(self, particleCfg, index)
             end
         end
 
-        if (particleCfg.timeToLive or 1) + (particleCfg.timeToDestroy or 1) <= 0 then remove = true end
-        if not particleCfg.persistent then if not visible then remove = true end end
-        return remove
+        if (particleCfg.timeToLive or 1) + (particleCfg.timeToDestroy or 1) <= 0 then return true end
+        if not particleCfg.persistent then if not visible then return true end end
     end
 
     if shouldRemove(particleCfg) then
@@ -195,10 +197,6 @@ canvas.updateParticle = function(self, particleCfg, index)
     else
         return particleCfg
     end
-end
-
-canvas.shouldRender = function(self)
-
 end
 
 canvas.drawParticles = function(self) -- a small premade function to draw particles
@@ -214,16 +212,23 @@ canvas.drawParticles = function(self) -- a small premade function to draw partic
             local particleCfg = canvas:updateParticle(particleCfg, i)
             if particleCfg then
                 if canvasStorage.debug then
-                    local text = "tTL : " .. math.floor(particleCfg.timeToLive)
+                    local text = "tTL : " .. math.floor((particleCfg.timeToLive or 1) + (particleCfg.timeToDestroy or 1))
                     local textPositioning = {
                         position = vec2.add(particleCfg.position, {0, 6}),
                         horizontalAnchor = "mid", -- left, mid, right
                         verticalAnchor = "mid", -- top, mid, bottom
                         wrapWidth = nil -- wrap width in pixels or nil
                     }
+                    if not particleCfg.positionLocked then
+                        textPositioning.position = vec2.add(canvas:translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0), {0, 6})
+                    end
                     canvas:drawText(text, textPositioning, 4, {255, 255, 255})
                 end
-                canvas:drawImageDrawable(particleCfg.image or "/assetmissing.png", canvas:translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0), particleCfg.scale or scale, particleCfg.color or color, particleCfg.rotation or 0)
+                if not particleCfg.positionLocked then
+                    canvas:drawImageDrawable(particleCfg.image or "/assetmissing.png", canvas:translateFromCamera(particleCfg.position, 0, particleCfg.parallax or 0), particleCfg.scale or scale, particleCfg.color or color, particleCfg.rotation or 0)
+                else
+                    canvas:drawImageDrawable(particleCfg.image or "/assetmissing.png", particleCfg.position, particleCfg.scale or scale, particleCfg.color or color, particleCfg.rotation or 0)
+                end
                 canvasStorage.particle[i] = particleCfg
             end
         end
@@ -254,27 +259,36 @@ canvas.anchor = function(self, anchor)
         if anchor == "centerLeft"    then return {0, vec2.div(canvas:size(), 2)[2]}                end
         if anchor == "centerRight"   then return {canvas:size()[1], vec2.div(canvas:size(), 2)[2]} end
         if anchor == "center"        then return vec2.div(canvas:size(), 2)                        end
-        return {0, 0}
     end
+    return {0, 0}
 end
 
-canvas.isVisible = function(self, image, position)
-    local visiblePos = rect.zero()
-    visiblePos[3] = visiblePos[3] + root.imageSize(image)[1]
-    visiblePos[4] = visiblePos[4] + root.imageSize(image)[2]
-    visiblePos = rect.shiftByVec2(visiblePos, position)
-    -- Left
-    if (visiblePos[1] > 0 and visiblePos[1] < canvas:size()[1]) then return true end
-    -- Right
-    --sb.logInfo("Right %s", not (visiblePos[3] > canvas:size()[1] and visiblePos[3] < 0) )
-    if (visiblePos[3] > canvas:size()[1] and visiblePos[3] < 0) then return true end
-    -- Bottom
-    if (visiblePos[2] > 0 and visiblePos[2] < canvas:size()[2]) then return true end
-    -- Top
-    --sb.logInfo("Top %s", not (visiblePos[4] > canvas:size()[2] and visiblePos[4] < 0) )
-    if (visiblePos[4] > canvas:size()[2] and visiblePos[4] < 0) then return true end
+canvas.isVisible = function(self, image, position, centered)
+	if type(image) == "string" then -- images	
+		local visiblePos = rect.zero()
+		local imageSize = root.imageSize(image)
+		local canvasRect = {
+			0,
+			0,
+			canvas.size()[1],
+			canvas.size()[2]
+		}
 
+		visiblePos[3] = visiblePos[3] + imageSize[1]
+		visiblePos[4] = visiblePos[4] + imageSize[2]
+		visiblePos = rect.shiftByVec2(visiblePos, position)
+
+		if centered then visiblePos = rect.shiftByVec2(visiblePos, vec2.mul(vec2.mul(imageSize, 0.5), -1)) end
+		if rect.vec2InRect(canvasRect, visiblePos) then return true end
+
+		local horizontalIntersect = ((visiblePos[1] < canvasRect[3]) and (canvasRect[1] < visiblePos[3]))
+		local verticalIntersect = ((visiblePos[2] < canvasRect[4]) and (canvasRect[2] < visiblePos[4]))
     
+
+		if horizontalIntersect and verticalIntersect then return true end
+	elseif type(image) == "table" then -- positions
+	
+	end
 end
 
 canvas.translateFromCamera = function(self, position, zoom, parallax)
@@ -285,11 +299,8 @@ canvas.translateFromCamera = function(self, position, zoom, parallax)
 
     local effectivePosition = {0, 0}
     local cameraPos = canvasStorage.camPos or {0, 0}
-    if parallaxStr ~= 1 then
-        effectivePosition = vec2.mul(cameraPos, parallaxStr)
-    else
-        effectivePosition = cameraPos
-    end
+    effectivePosition = vec2.mul(cameraPos, parallaxStr)
+    --effectivePosition = vec2.mul(effectivePosition, (1 + zoom))
     
     return vec2.add(position, effectivePosition)
 end
@@ -300,11 +311,11 @@ canvas.cameraDrag = function(self)
         canvasStorage.dragNew = canvas:mousePosition()
         local newPos = {0,0}
         if canvasStorage.dragPrev then
-            if canvasStorage.dragNew[1] ~= canvasStorage.dragPrev[1] then
+            if (not canvasStorage.lockHCamPos) and (canvasStorage.dragNew[1] ~= canvasStorage.dragPrev[1]) then
                 newPos[1] = canvasStorage.dragNew[1] - canvasStorage.dragPrev[1]
             end
 
-            if canvasStorage.dragNew[2] ~= canvasStorage.dragPrev[2] then
+            if (not canvasStorage.lockVCamPos) and (canvasStorage.dragNew[2] ~= canvasStorage.dragPrev[2]) then
                 newPos[2] = canvasStorage.dragNew[2] - canvasStorage.dragPrev[2]
             end
         end

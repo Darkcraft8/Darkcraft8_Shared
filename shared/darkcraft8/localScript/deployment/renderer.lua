@@ -31,7 +31,7 @@ function uninit()
 end
 
 local function d8SharedRendererSort(a, b)
-    return (a.priority or 0) > (b.priority or 0)
+    return (a.priority or 0) < (b.priority or 0)
 end
 
 d8SharedRenderer.init = function()
@@ -60,8 +60,6 @@ d8SharedRenderer.init = function()
                 priority = priority or 0,
                 drawable = drawable
             }
-
-            table.sort(d8SharedRendererStorage.drawableList[playerUuid], d8SharedRendererSort)
             return true
         end
     end)
@@ -128,7 +126,13 @@ end
 
 d8SharedRenderer.update = function(dt)
     if d8SharedRendererStorage.drawableList[player.uniqueId()] then
-        for id, cfg in pairs(d8SharedRendererStorage.drawableList[player.uniqueId()] or {}) do   
+        
+        local renderTable = {}
+        for id, cfg in pairs(d8SharedRendererStorage.drawableList[player.uniqueId()] or {}) do
+            table.insert(renderTable, cfg)
+        end
+        table.sort(renderTable, d8SharedRendererSort)
+        for id, cfg in pairs(renderTable) do
             local drawableType = d8SharedRenderer.drawableType(cfg.drawable)
             if drawableType == "drawable" then
                 localAnimator.addDrawable(cfg.drawable, "ForegroundOverlay-1")

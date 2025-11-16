@@ -1,21 +1,34 @@
+local log = {}
 local function hasAccessToRequiredTable()
     if not world then
-        sb.logWarn("[d8SharedRendererUtil] world functions table ins't available, abandoning call")
+        if not log["worldMissing"] then 
+            log["worldMissing"] = true
+            sb.logWarn("[d8SharedRendererUtil] world functions table ins't available, abandoning call")
+        end
         return false
     end
 
     if not world.sendEntityMessage then
-        sb.logWarn("[d8SharedRendererUtil] world.sendEntityMessage function ins't available, abandoning call")
+        if not log["world.sendEntityMessage"] then 
+            log["world.sendEntityMessage"] = true
+            sb.logWarn("[d8SharedRendererUtil] world.sendEntityMessage function ins't available, abandoning call")
+        end
         return false
     end
 
     if not player then
-        sb.logWarn("[d8SharedRendererUtil] player functions table ins't available, abandoning call")
+        if not log["playerMissing"] then 
+            log["playerMissing"] = true
+            sb.logWarn("[d8SharedRendererUtil] player functions table ins't available, abandoning call")
+        end
         return false
     end
     
     if not world.entityExists(player.id()) then
-        sb.logWarn("[d8SharedRendererUtil] player entity not initialised/doesn't exist, abandoning call")
+        if not log["uninitialisedPlayer"] then 
+            log["uninitialisedPlayer"] = true
+            sb.logWarn("[d8SharedRendererUtil] player entity not initialised/doesn't exist, abandoning call")
+        end
         return false
     end
 

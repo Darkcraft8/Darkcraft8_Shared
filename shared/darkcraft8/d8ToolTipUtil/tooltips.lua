@@ -157,6 +157,7 @@ function D8Tooltip:text(tooltipText)
     return
 end
 -- older sibling to scriptedItemList that doesn't open a scripted pane... got a visual update, should look extremely close to vanilla
+function D8Tooltip:vanillaBasedItemList(itemList, override) return D8Tooltip:itemList(itemList, override) end -- backward compat
 function D8Tooltip:itemList(itemList, override)
     require "/shared/darkcraft8/util/item.lua"
     local vanillaConfig = root.assetJson("/interface/craftingtooltip/craftingtooltip.config")

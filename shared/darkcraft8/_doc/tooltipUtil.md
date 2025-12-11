@@ -21,10 +21,10 @@ Prepare and Return a text tooltip, unlike the vanilla version this one will take
 
 ---
 
-#### **'Tooltip' D8Tooltip.vanillaBasedItemList(`Table` itemList, `Json` override)**
+#### **'Tooltip' D8Tooltip.itemList(`Table` itemList, `Json` override)**
 
 Prepare and Return a tooltip that mimic the appearance of the ingredients tooltip of the crafting panes,</br>
-less sophisticated than it scripted counterpart.
+vanillaBasedItemList still work for compatibility reason.
 
 ---
 

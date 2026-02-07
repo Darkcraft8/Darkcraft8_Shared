@@ -294,6 +294,10 @@ function D8Tooltip:itemList(itemList, override)
             else
                 itemPlayerCount = player.hasCountOfItem(descriptor, override.matchInputParameters)  
             end
+            if configParameter("currency") then
+                itemPlayerCount = player.currency(configParameter("currency"))
+            end
+
             if itemPlayerCount >= itemCount then
                 tooltip.itemList.children[name]["children"]["count"]["value"] = "^green;" .. itemPlayerCount .. "/" .. itemCount
             else

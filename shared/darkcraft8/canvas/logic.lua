@@ -80,14 +80,17 @@ canvas.buttonUpd = function(self, dt, simulateMouseClickDetection)
                     local btnCfg = canvasStorage.btn.btnTable[index]
                     effectiveDetectArea = rect.scale(effectiveDetectArea, (btnCfg.scale or 1))
                     if canvasStorage.pressedButton == button.name then
+                        if btnCfg["backImage"] then canvas:drawImage(btnCfg["backImage"]["pressed"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) end
                         canvas:drawImage(btnCfg["image"]["pressed"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) 
                     elseif rect.isRect(effectiveDetectArea) then
                         if rect.vec2InRect(rect.shiftByVec2(effectiveDetectArea, effectivePosition), canvas:mousePosition()) then
                             if not button.disabled then
                                 canvasStorage.overredBtn = button
                                 if compare(canvasStorage.overredBtn, button) then
+                                    if btnCfg["backImage"] then canvas:drawImage(btnCfg["backImage"]["hover"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) end
                                     canvas:drawImage(btnCfg["image"]["hover"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) 
                                 else
+                                    if btnCfg["backImage"] then canvas:drawImage(btnCfg["backImage"]["base"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) end
                                     canvas:drawImage(btnCfg["image"]["base"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false)
                                 end
                             else
@@ -95,11 +98,13 @@ canvas.buttonUpd = function(self, dt, simulateMouseClickDetection)
                             end
                         else
                             if not button.disabled then
+                                if btnCfg["backImage"] then canvas:drawImage(btnCfg["backImage"]["base"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) end
                                 canvas:drawImage(btnCfg["image"]["base"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false)
                             end
                         end
 
                         if button.disabled then
+                            if btnCfg["backImage"] then canvas:drawImage(btnCfg["backImage"]["disabled"] or "/assetmissing.png", effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false) end
                             canvas:drawImage(btnCfg["image"]["disabled"] or btnCfg["image"]["base"], effectivePosition, btnCfg.scale or 1, {255, 255, 255}, btnCfg.centered or false)
                         end
                     end

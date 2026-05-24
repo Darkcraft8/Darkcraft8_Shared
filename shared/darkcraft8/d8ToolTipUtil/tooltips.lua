@@ -262,10 +262,14 @@ function D8Tooltip:itemList(itemList, override)
             if not added then
                 table.insert(itemList, {
                     name = currency,
-                    count = amount
+                    count = amount,
+                    priority = 1
                 })
             end
         end
+        table.sort(itemList, function(a, b)
+            return (a.priority or 0) > (b.priority or 0)
+        end)
     end
 
     for index, descriptor in ipairs(itemList) do
@@ -435,10 +439,14 @@ function D8Tooltip:scriptedItemList(itemList, mousePosition, override, backgroun
             if not added then
                 table.insert(itemList, {
                     name = currency,
-                    count = amount
+                    count = amount,
+                    priority = 1
                 })
             end
         end
+        table.sort(itemList, function(a, b)
+            return (a.priority or 0) > (b.priority or 0)
+        end)
     end
 
     for index, descriptor in pairs(itemList or {}) do

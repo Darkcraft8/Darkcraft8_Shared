@@ -8,7 +8,11 @@ d8SharedRenderer = {}
 d8SharedRendererStorage = {
     drawableList = {}
 }
-
+local logs = {
+    addDrawable = {},
+    removeDrawable = {},
+    updateDrawable = {}
+}
 local _init = init
 local _update = update
 local _teleportOut = teleportOut
@@ -38,19 +42,25 @@ d8SharedRenderer.init = function()
     message.setHandler("d8SharedRenderer|addDrawable", function(_, isLocal, drawable, priority, identifier, playerUuid)
         if isLocal then
             -- Checks to see if all the required part are present
+                local id = string.format("i%s,pu%s", sb.print(identifier), sb.print(playerUuid))
                 if not drawable then
+                    if logs["addDrawable"][id] then return false else logs["addDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] addDrawable didn't receive a drawable")
                     return false
                 elseif not identifier then
+                    if logs["addDrawable"][id] then return false else logs["addDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] addDrawable didn't receive an identifier")
                     return false
                 elseif type(drawable) ~= "table" then
+                    if logs["addDrawable"][id] then return false else logs["addDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] addDrawable receive a drawable of type %s, expected type table", type(drawable))
                     return false
                 elseif type(identifier) ~= "string" then
+                    if logs["addDrawable"][id] then return false else logs["addDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] addDrawable receive an identifier of type %s, expected type string", type(identifier))
                     return false
                 elseif not playerUuid then
+                    if logs["addDrawable"][id] then return false else logs["addDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] addDrawable didn't receive an playerUuid")
                     return false
                 end
@@ -67,10 +77,13 @@ d8SharedRenderer.init = function()
     message.setHandler("d8SharedRenderer|removeDrawable", function(_, isLocal, identifier, playerUuid)
         if isLocal then
             -- Checks to see if all the required part are present
+                local id = string.format("i%s,pu%s", sb.print(identifier), sb.print(playerUuid))
                 if not identifier then
+                    if logs["removeDrawable"][id] then return false else logs["removeDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] removeDrawable didn't receive an identifier")
                     return false
                 elseif not playerUuid then
+                    if logs["removeDrawable"][id] then return false else logs["removeDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] removeDrawable didn't receive an playerUuid")
                     return false
                 end
@@ -86,16 +99,21 @@ d8SharedRenderer.init = function()
     message.setHandler("d8SharedRenderer|updateDrawable", function(_, isLocal, drawable, identifier, playerUuid)
         if isLocal then
             -- Checks to see if all the required part are present
+                local id = string.format("i%s,pu%s", sb.print(identifier), sb.print(playerUuid))
                 if not identifier then
+                    if logs["updateDrawable"][id] then return false else logs["updateDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] updateDrawable didn't receive an identifier")
                     return false
                 elseif not playerUuid then
+                    if logs["updateDrawable"][id] then return false else logs["updateDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] updateDrawable didn't receive an playerUuid")
                     return false
                 elseif not d8SharedRendererStorage.drawableList[playerUuid] then
+                    if logs["updateDrawable"][id] then return false else logs["updateDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] updateDrawable couldn't find a drawable list for %s, pls use addDrawable to add or set a drawable", playerUuid)
                     return false
                 elseif not d8SharedRendererStorage.drawableList[playerUuid][identifier] then
+                    if logs["updateDrawable"][id] then return false else logs["updateDrawable"][id] = true end
                     sb.logWarn("[d8SharedRenderer] updateDrawable couldn't find a drawable identified as %s in %s, pls use addDrawable to add or set a drawable", identifier, playerUuid)
                     return false
                 end

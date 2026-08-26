@@ -153,11 +153,11 @@ d8SharedRenderer.update = function(dt)
         for id, cfg in pairs(renderTable) do
             local drawableType = d8SharedRenderer.drawableType(cfg.drawable)
             if drawableType == "drawable" then
-                localAnimator.addDrawable(cfg.drawable, "ForegroundOverlay-1")
+                localAnimator.addDrawable(cfg.drawable, cfg.drawable.layer or "ForegroundOverlay-1")
             elseif drawableType == "progressBar" then
                 local drawable = d8SharedRenderer.prepareProgressBar(cfg.drawable)
-                localAnimator.addDrawable(drawable.back, "ForegroundOverlay-1")
-                localAnimator.addDrawable(drawable.fill, "ForegroundOverlay-1")
+                localAnimator.addDrawable(drawable.back, cfg.back.layer or "ForegroundOverlay-1")
+                localAnimator.addDrawable(drawable.fill, cfg.fill.layer or "ForegroundOverlay-1")
             end
         end
     end

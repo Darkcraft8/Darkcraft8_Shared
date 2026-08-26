@@ -9,7 +9,7 @@ segmentString = function(string)
             full = string.sub(full, 2, string.len(full))
         else
             str = string.sub(full, s, e)
-            full = string.sub(full, e, string.len(full))
+            full = string.sub(full, e+1, string.len(full))
         end
         table.insert(result, str)
     end

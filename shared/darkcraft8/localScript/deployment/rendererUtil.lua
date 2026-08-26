@@ -16,15 +16,15 @@ local function hasAccessToRequiredTable()
         return false
     end
 
-    if not player then
+    if not (player or entity) then
         if not log["playerMissing"] then 
             log["playerMissing"] = true
-            sb.logWarn("[d8SharedRendererUtil] player functions table ins't available, abandoning call")
+            sb.logWarn("[d8SharedRendererUtil] player or entity functions table ins't available, abandoning call")
         end
         return false
     end
     
-    if not world.entityExists(player.id()) then
+    if not world.entityExists((player or entity).id()) then
         if not log["uninitialisedPlayer"] then 
             log["uninitialisedPlayer"] = true
             sb.logWarn("[d8SharedRendererUtil] player entity not initialised/doesn't exist, abandoning call")
@@ -38,7 +38,7 @@ end
 d8SharedRendererUtil = {}
 d8SharedRendererUtil.addDrawable = function(drawable, priority, identifier)
     if hasAccessToRequiredTable() then
-        local rpcDrawable = world.sendEntityMessage(player.id(), "d8SharedRenderer|addDrawable", drawable, priority, identifier, player.uniqueId())
+        local rpcDrawable = world.sendEntityMessage((player or entity).id(), "d8SharedRenderer|addDrawable", drawable, priority, identifier, (player or entity).uniqueId())
         local rpcResult = false
         if rpcDrawable then
             if rpcDrawable:finished() then
@@ -51,7 +51,7 @@ end
 
 d8SharedRendererUtil.updateDrawable = function(drawable, identifier)
     if hasAccessToRequiredTable() then
-        local rpcDrawable = world.sendEntityMessage(player.id(), "d8SharedRenderer|updateDrawable", drawable, identifier, player.uniqueId())
+        local rpcDrawable = world.sendEntityMessage((player or entity).id(), "d8SharedRenderer|updateDrawable", drawable, identifier, (player or entity).uniqueId())
         local rpcResult = false
         if rpcDrawable then
             if rpcDrawable:finished() then
@@ -64,7 +64,7 @@ end
 
 d8SharedRendererUtil.removeDrawable = function(identifier)
     if hasAccessToRequiredTable() then
-        local rpcDrawable = world.sendEntityMessage(player.id(), "d8SharedRenderer|removeDrawable", identifier, player.uniqueId())
+        local rpcDrawable = world.sendEntityMessage((player or entity).id(), "d8SharedRenderer|removeDrawable", identifier, (player or entity).uniqueId())
         local rpcResult = false
         if rpcDrawable then
             if rpcDrawable:finished() then
@@ -77,7 +77,7 @@ end
 
 d8SharedRendererUtil.hasDrawable = function(identifier)
     if hasAccessToRequiredTable() then
-        local rpcDrawable = world.sendEntityMessage(player.id(), "d8SharedRenderer|hasDrawable", identifier, player.uniqueId())
+        local rpcDrawable = world.sendEntityMessage((player or entity).id(), "d8SharedRenderer|hasDrawable", identifier, (player or entity).uniqueId())
         local rpcResult = false
         if rpcDrawable then
             if rpcDrawable:finished() then
